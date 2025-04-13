@@ -35,7 +35,6 @@ class Neo4jManager:
             )
             logger.info(f"Conectado ao Neo4j em {self.uri}")
 
-            # Testar conexão verificando classes UCO
             with self.driver.session() as session:
                 result = session.run(
                     "MATCH (c:Resource:owl__Class) RETURN count(c) AS count"

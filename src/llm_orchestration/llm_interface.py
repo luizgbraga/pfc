@@ -27,14 +27,14 @@ class LLMInterface:
             openai.api_key = self.api_key
             logger.info(f"Interface LLM configurada com modelo {self.model_name}")
 
-    async def generate(
+    def generate(
         self,
         prompt: str,
         system_message: str = None,
         temperature: float = 0.2,
         max_tokens: int = 2000,
     ) -> Dict[str, Any]:
-        """Gera uma resposta do LLM.
+        """Gera uma resposta do LLM (versão síncrona).
 
         Args:
             prompt: O prompt a ser enviado ao modelo
@@ -48,24 +48,22 @@ class LLMInterface:
         try:
             messages = []
 
-            # Adicionar mensagem do sistema se fornecida
             if system_message:
                 messages.append({"role": "system", "content": system_message})
 
-            # Adicionar prompt do usuário
             messages.append({"role": "user", "content": prompt})
 
             logger.debug(f"Enviando prompt para LLM ({len(prompt)} caracteres)")
 
-            # Chamar API OpenAI
-            response = await openai.ChatCompletion.acreate(
+            client = openai.OpenAI(api_key=self.api_key)
+
+            response = client.chat.completions.create(
                 model=self.model_name,
                 messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
 
-            # Extrair e retornar a resposta
             result = {
                 "content": response.choices[0].message.content,
                 "model": response.model,

@@ -26,7 +26,6 @@ class PromptManager:
             os.makedirs(self.templates_dir)
             logger.info(f"Diretório de templates criado: {self.templates_dir}")
 
-            # Criar template padrão
             default_template = self._get_default_template()
             template_path = os.path.join(self.templates_dir, "playbook_default.j2")
 
@@ -59,7 +58,6 @@ class PromptManager:
                     logger.error(f"Erro ao carregar template {filename}: {str(e)}")
 
         if not templates:
-            # Fallback para template padrão em memória
             default_content = self._get_default_template()
             templates["playbook_default"] = Template(default_content)
             logger.warning("Nenhum template em disco, usando padrão em memória")
@@ -75,7 +73,7 @@ class PromptManager:
         return """
         {# Template para geração de playbook de segurança #}
         Você é um especialista em resposta a incidentes de segurança cibernética.
-        Analise o seguinte alerta de segurança e crie um playbook detalhado de resposta.
+        Analise o seguinte alerta de segurança e crie um playbook detalhado de resposta com comandos técnicos específicos e passos concretos.
 
         ### ALERTA DE SEGURANÇA
         {% if alert_name %}Alerta: {{ alert_name }}{% endif %}
@@ -96,7 +94,7 @@ class PromptManager:
         ### CONHECIMENTO CONTEXTUAL DA ONTOLOGIA DE SEGURANÇA
         {{ graph_context }}
 
-        Crie um playbook completo de resposta a incidentes com as seguintes seções:
+        Crie um playbook técnico e detalhado de resposta a incidentes com as seguintes seções:
 
         1. RESUMO DO INCIDENTE
         - Visão geral do que ocorreu
@@ -106,7 +104,7 @@ class PromptManager:
 
         2. PASSOS DE INVESTIGAÇÃO
         - Passos iniciais para triagem
-        - Coleta de evidências
+        - Coleta de evidências (com comandos específicos)
         - Análise técnica detalhada
         - Comandos e ferramentas específicos para usar
         - Indicadores a procurar
@@ -132,8 +130,15 @@ class PromptManager:
         - Melhorias de segurança sugeridas
         - Atualizações de políticas ou procedimentos
 
-        Para cada passo, forneça instruções específicas e acionáveis com comandos quando aplicável.
+        Para cada passo, forneça:
+        - Instruções extremamente específicas e acionáveis
+        - Comandos exatos quando aplicável (formatados como código)
+        - Sintaxe precisa das ferramentas
+        - Exemplos concretos
+        - Critérios de decisão claros
+
         Baseie suas recomendações no conhecimento da ontologia de segurança fornecida.
+        Seja técnico, detalhado e prático. Evite generalizações vagas.
         """
 
     def format_playbook_prompt(
@@ -152,22 +157,18 @@ class PromptManager:
         Returns:
             Dicionário com mensagem do sistema e prompt
         """
-        # Verificar se o template existe
         if template_name not in self.templates:
             logger.warning(f"Template '{template_name}' não encontrado, usando padrão")
             template_name = "playbook_default"
 
-        # Preparar dados para o template
         template_data = {
             "graph_context": graph_context,
             "raw_logs": incident_data.get("logs", ""),
-            **incident_data,  # Expandir todos os campos do incidente
+            **incident_data,
         }
 
-        # Aplicar o template
         prompt = self.templates[template_name].render(template_data)
 
-        # Criar mensagem do sistema
         system_message = (
             "Você é CyberPlaybookGPT, um assistente especializado em segurança cibernética "
             "para criar playbooks detalhados de resposta a incidentes baseados em ontologias "

@@ -1,0 +1,550 @@
+
+        <!DOCTYPE html>
+        <html lang="pt-br">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Playbook de Segurança - Multiple Failed Login Attempts Followed by Successful Login</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    margin: 0;
+                    padding: 20px;
+                    color: #333;
+                    background-color: #f8f9fa;
+                }
+                .container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    background-color: white;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                header {
+                    background-color: #2c3e50;
+                    color: white;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+                h1, h2, h3 {
+                    margin-top: 0;
+                }
+                .metadata {
+                    background-color: #f5f5f5;
+                    padding: 15px;
+                    border-radius: 5px;
+                    margin-bottom: 20px;
+                    border-left: 4px solid #3498db;
+                }
+                .metadata-item {
+                    margin: 5px 0;
+                }
+                .section {
+                    margin-bottom: 30px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    overflow: hidden;
+                }
+                .section-header {
+                    background-color: #34495e;
+                    color: white;
+                    padding: 10px 15px;
+                }
+                .section-content {
+                    padding: 15px;
+                }
+                .step {
+                    margin-bottom: 25px;
+                    border-left: 3px solid #3498db;
+                    padding-left: 15px;
+                }
+                .step-header {
+                    font-weight: bold;
+                    font-size: 1.1em;
+                    margin-bottom: 10px;
+                    color: #2980b9;
+                }
+                .step-content {
+                    margin: 10px 0;
+                }
+                .commands {
+                    background-color: #f9f9f9;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-family: monospace;
+                    margin: 10px 0;
+                }
+                .command {
+                    margin: 5px 0;
+                    padding: 5px;
+                    background-color: #eee;
+                    border-radius: 3px;
+                }
+                .subitems {
+                    margin: 10px 0 10px 20px;
+                }
+                .subitem {
+                    margin: 5px 0;
+                }
+                .severity-high {
+                    color: #e74c3c;
+                    font-weight: bold;
+                }
+                .severity-medium {
+                    color: #f39c12;
+                    font-weight: bold;
+                }
+                .severity-low {
+                    color: #2ecc71;
+                    font-weight: bold;
+                }
+                strong {
+                    color: #2c3e50;
+                }
+                pre {
+                    white-space: pre-wrap;
+                    background-color: #f8f9fa;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-family: monospace;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <header>
+                    <h1>Playbook de Resposta a Incidentes</h1>
+                    <h2>Multiple Failed Login Attempts Followed by Successful Login</h2>
+                </header>
+                
+                <div class="metadata">
+                    <h3>Metadados do Incidente</h3>
+                    <div class="metadata-item"><strong>Tipo de Incidente:</strong> Security Incident</div>
+                    <div class="metadata-item"><strong>Severidade:</strong> <span class="severity-high">High</span></div>
+                    <div class="metadata-item"><strong>IP de Origem:</strong> 192.168.1.100</div>
+                    <div class="metadata-item"><strong>IP de Destino:</strong> 10.0.0.5</div>
+                    <div class="metadata-item"><strong>Hostname:</strong> srv-db-prod01</div>
+                    <div class="metadata-item"><strong>Usuário:</strong> admin</div>
+                    <div class="metadata-item"><strong>Gerado em:</strong> 2025-04-13T20:01:29.253719</div>
+                </div>
+        
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Resumo do Incidente</h3>
+                    </div>
+                    <div class="section-content">
+            
+                        <div class="step">
+                            <div class="step-header">Visão geral do que ocorreu</div>
+                
+                            <div class="step-content">Um usuário não autorizado realizou múltiplas tentativas de login falhas seguidas por um login bem-sucedido na máquina <code>srv-db-prod01</code> usando a conta <code>admin</code>. Após o login, comandos suspeitos foram executados, incluindo a alteração de permissões críticas e o download de um payload potencialmente malicioso.</div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Classificação técnica do incidente</div>
+                
+                            <div class="step-content">Privilege Escalation</div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Avaliação de severidade</div>
+                
+                            <div class="step-content">Alta. O acesso não autorizado a um sistema crítico com execução de comandos privilegiados representa um risco significativo à segurança.</div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Potencial impacto</div>
+                
+                            <div class="step-content">Comprometimento de dados sensíveis, potencial instalação de malware, e possível movimentação lateral dentro da rede.</div>
+                    
+                        </div>
+                
+                    </div>
+                </div>
+            
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Passos de Investigação</h3>
+                    </div>
+                    <div class="section-content">
+            
+                        <div class="step">
+                            <div class="step-header">Passos iniciais para triagem</div>
+                
+                            <div class="step-content">Verificar logs de autenticação para confirmar o padrão de login.
+Identificar o escopo do acesso não autorizado.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Identificar o escopo do acesso não autorizado.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Coleta de evidências</div>
+                
+                            <div class="step-content">Capturar logs de autenticação e comandos executados.
+Realizar captura de memória (RAM) do sistema afetado.
+Coletar cópias dos arquivos modificados, especialmente <code>/etc/shadow</code>.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Realizar captura de memória (RAM) do sistema afetado.</div>
+                        
+                                <div class="subitem">• Coletar cópias dos arquivos modificados, especialmente `/etc/shadow`.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Análise técnica detalhada</div>
+                
+                            <div class="step-content">Analisar logs de rede para identificar comunicação com o IP malicioso.
+Verificar integridade de arquivos críticos do sistema.
+Analisar o payload baixado para identificar comportamento malicioso.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Verificar integridade de arquivos críticos do sistema.</div>
+                        
+                                <div class="subitem">• Analisar o payload baixado para identificar comportamento malicioso.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Comandos e ferramentas específicos para usar</div>
+                
+                            <div class="step-content"><code>grep "Failed password" /var/log/auth.log</code> para listar tentativas de login falhas.
+<code>grep "Accepted password" /var/log/auth.log</code> para confirmar login bem-sucedido.
+<code>netstat -anp</code> para verificar conexões de rede ativas.
+Ferramentas como <code>Volatility</code> para análise de memória.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• `grep "Accepted password" /var/log/auth.log` para confirmar login bem-sucedido.</div>
+                        
+                                <div class="subitem">• `netstat -anp` para verificar conexões de rede ativas.</div>
+                        
+                                <div class="subitem">• Ferramentas como `Volatility` para análise de memória.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Indicadores a procurar</div>
+                
+                            <div class="step-content">IPs externos suspeitos.
+Alterações não autorizadas em arquivos críticos.
+Processos desconhecidos em execução.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Alterações não autorizadas em arquivos críticos.</div>
+                        
+                                <div class="subitem">• Processos desconhecidos em execução.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                    </div>
+                </div>
+            
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Procedimentos de Contenção</h3>
+                    </div>
+                    <div class="section-content">
+            
+                        <div class="step">
+                            <div class="step-header">Ações imediatas para limitar o impacto</div>
+                
+                            <div class="step-content">Revogar imediatamente o acesso da conta <code>admin</code>.
+Alterar senhas de todas as contas privilegiadas.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Alterar senhas de todas as contas privilegiadas.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Isolamento de sistemas afetados</div>
+                
+                            <div class="step-content">Desconectar <code>srv-db-prod01</code> da rede para evitar comunicação externa.</div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Bloqueio de atividade maliciosa</div>
+                
+                            <div class="step-content">Bloquear o IP de origem 192.168.1.100 no firewall.
+Remover processos maliciosos em execução.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Remover processos maliciosos em execução.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Preservação de evidências</div>
+                
+                            <div class="step-content">Garantir que todos os logs e capturas de memória sejam armazenados em um local seguro.</div>
+                    
+                        </div>
+                
+                    </div>
+                </div>
+            
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Passos de Erradicação</h3>
+                    </div>
+                    <div class="section-content">
+            
+                        <div class="step">
+                            <div class="step-header">Remoção da ameaça</div>
+                
+                            <div class="step-content">Remover o payload malicioso e quaisquer outros arquivos suspeitos.
+Restaurar permissões corretas para <code>/etc/shadow</code> com <code>chmod 640 /etc/shadow</code>.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Restaurar permissões corretas para `/etc/shadow` com `chmod 640 /etc/shadow`.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Correção de vulnerabilidades exploradas</div>
+                
+                            <div class="step-content">Aplicar patches de segurança pendentes no sistema.
+Revisar e reforçar políticas de senha.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Revisar e reforçar políticas de senha.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Verificação de comprometimento em outros sistemas</div>
+                
+                            <div class="step-content">Realizar varredura de segurança em sistemas conectados para detectar sinais de comprometimento.</div>
+                    
+                        </div>
+                
+                    </div>
+                </div>
+            
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Procedimentos de Recuperação</h3>
+                    </div>
+                    <div class="section-content">
+            
+                        <div class="step">
+                            <div class="step-header">Restauração de sistemas afetados</div>
+                
+                            <div class="step-content">Restaurar o sistema a partir de backups conhecidos e seguros, se necessário.</div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Validação da integridade</div>
+                
+                            <div class="step-content">Verificar a integridade do sistema usando ferramentas de verificação de integridade de arquivos.</div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Retorno às operações normais</div>
+                
+                            <div class="step-content">Monitorar o sistema para garantir que não haja atividade suspeita após a restauração.</div>
+                    
+                        </div>
+                
+                    </div>
+                </div>
+            
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Lições Aprendidas e Prevenção</h3>
+                    </div>
+                    <div class="section-content">
+            
+                        <div class="step">
+                            <div class="step-header">Recomendações para prevenir incidentes similares</div>
+                
+                            <div class="step-content">Implementar autenticação multifator para contas privilegiadas.
+Configurar alertas para tentativas de login falhas repetidas.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Configurar alertas para tentativas de login falhas repetidas.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Melhorias de segurança sugeridas</div>
+                
+                            <div class="step-content">Revisar e atualizar regras de firewall para limitar o acesso SSH.
+Implementar segmentação de rede para limitar o movimento lateral.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Implementar segmentação de rede para limitar o movimento lateral.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                        <div class="step">
+                            <div class="step-header">Atualizações de políticas ou procedimentos</div>
+                
+                            <div class="step-content">Atualizar políticas de resposta a incidentes para incluir procedimentos de contenção e erradicação mais robustos.
+Realizar treinamentos regulares de segurança para a equipe de TI e usuários finais.</div>
+                    
+                            <div class="subitems">
+                    
+                                <div class="subitem">• Realizar treinamentos regulares de segurança para a equipe de TI e usuários finais.</div>
+                        
+                            </div>
+                    
+                        </div>
+                
+                    </div>
+                </div>
+            
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Resposta Original do LLM</h3>
+                    </div>
+                    <div class="section-content">
+                        <details>
+                            <summary>Expandir para ver a resposta completa</summary>
+                            <pre>
+        ### 1. RESUMO DO INCIDENTE
+
+- **Visão geral do que ocorreu:** 
+  Um usuário não autorizado realizou múltiplas tentativas de login falhas seguidas por um login bem-sucedido na máquina `srv-db-prod01` usando a conta `admin`. Após o login, comandos suspeitos foram executados, incluindo a alteração de permissões críticas e o download de um payload potencialmente malicioso.
+
+- **Classificação técnica do incidente:** 
+  Privilege Escalation
+
+- **Avaliação de severidade:** 
+  Alta. O acesso não autorizado a um sistema crítico com execução de comandos privilegiados representa um risco significativo à segurança.
+
+- **Potencial impacto:** 
+  Comprometimento de dados sensíveis, potencial instalação de malware, e possível movimentação lateral dentro da rede.
+
+### 2. PASSOS DE INVESTIGAÇÃO
+
+- **Passos iniciais para triagem:**
+  - Verificar logs de autenticação para confirmar o padrão de login.
+  - Identificar o escopo do acesso não autorizado.
+
+- **Coleta de evidências:**
+  - Capturar logs de autenticação e comandos executados.
+  - Realizar captura de memória (RAM) do sistema afetado.
+  - Coletar cópias dos arquivos modificados, especialmente `/etc/shadow`.
+
+- **Análise técnica detalhada:**
+  - Analisar logs de rede para identificar comunicação com o IP malicioso.
+  - Verificar integridade de arquivos críticos do sistema.
+  - Analisar o payload baixado para identificar comportamento malicioso.
+
+- **Comandos e ferramentas específicos para usar:**
+  - `grep "Failed password" /var/log/auth.log` para listar tentativas de login falhas.
+  - `grep "Accepted password" /var/log/auth.log` para confirmar login bem-sucedido.
+  - `netstat -anp` para verificar conexões de rede ativas.
+  - Ferramentas como `Volatility` para análise de memória.
+
+- **Indicadores a procurar:**
+  - IPs externos suspeitos.
+  - Alterações não autorizadas em arquivos críticos.
+  - Processos desconhecidos em execução.
+
+### 3. PROCEDIMENTOS DE CONTENÇÃO
+
+- **Ações imediatas para limitar o impacto:**
+  - Revogar imediatamente o acesso da conta `admin`.
+  - Alterar senhas de todas as contas privilegiadas.
+
+- **Isolamento de sistemas afetados:**
+  - Desconectar `srv-db-prod01` da rede para evitar comunicação externa.
+
+- **Bloqueio de atividade maliciosa:**
+  - Bloquear o IP de origem 192.168.1.100 no firewall.
+  - Remover processos maliciosos em execução.
+
+- **Preservação de evidências:**
+  - Garantir que todos os logs e capturas de memória sejam armazenados em um local seguro.
+
+### 4. PASSOS DE ERRADICAÇÃO
+
+- **Remoção da ameaça:**
+  - Remover o payload malicioso e quaisquer outros arquivos suspeitos.
+  - Restaurar permissões corretas para `/etc/shadow` com `chmod 640 /etc/shadow`.
+
+- **Correção de vulnerabilidades exploradas:**
+  - Aplicar patches de segurança pendentes no sistema.
+  - Revisar e reforçar políticas de senha.
+
+- **Verificação de comprometimento em outros sistemas:**
+  - Realizar varredura de segurança em sistemas conectados para detectar sinais de comprometimento.
+
+### 5. PROCEDIMENTOS DE RECUPERAÇÃO
+
+- **Restauração de sistemas afetados:**
+  - Restaurar o sistema a partir de backups conhecidos e seguros, se necessário.
+
+- **Validação da integridade:**
+  - Verificar a integridade do sistema usando ferramentas de verificação de integridade de arquivos.
+
+- **Retorno às operações normais:**
+  - Monitorar o sistema para garantir que não haja atividade suspeita após a restauração.
+
+### 6. LIÇÕES APRENDIDAS E PREVENÇÃO
+
+- **Recomendações para prevenir incidentes similares:**
+  - Implementar autenticação multifator para contas privilegiadas.
+  - Configurar alertas para tentativas de login falhas repetidas.
+
+- **Melhorias de segurança sugeridas:**
+  - Revisar e atualizar regras de firewall para limitar o acesso SSH.
+  - Implementar segmentação de rede para limitar o movimento lateral.
+
+- **Atualizações de políticas ou procedimentos:**
+  - Atualizar políticas de resposta a incidentes para incluir procedimentos de contenção e erradicação mais robustos.
+  - Realizar treinamentos regulares de segurança para a equipe de TI e usuários finais.
+                            </pre>
+                        </details>
+                    </div>
+                </div>
+        
+            </div>
+        </body>
+        </html>
+        

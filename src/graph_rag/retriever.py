@@ -56,7 +56,6 @@ class GraphRetriever:
         if "incident_type" in incident_data:
             return incident_data["incident_type"]
 
-        # Heurísticas para determinar o tipo baseado no conteúdo
         if "alert_name" in incident_data:
             alert_name = incident_data["alert_name"].lower()
 
@@ -176,10 +175,8 @@ class GraphRetriever:
         Returns:
             Lista de padrões de ataque
         """
-        # Converter tipo de incidente para termos de busca
         search_terms = []
 
-        # Mapear tipos de incidente para termos relevantes na UCO
         incident_term_map = {
             "Brute Force Attack": ["Brute", "Password", "Credential"],
             "Malware Infection": ["Malware", "Malicious", "Infection"],
@@ -190,14 +187,11 @@ class GraphRetriever:
             "Malicious File Download": ["Download", "Payload", "Remote"],
         }
 
-        # Obter termos para o tipo de incidente
         if incident_type in incident_term_map:
             search_terms = incident_term_map[incident_type]
         else:
-            # Usar os termos do próprio tipo de incidente
             search_terms = incident_type.split()
 
-        # Buscar padrões de ataque para cada termo
         attack_patterns = []
         for term in search_terms:
             query = """
@@ -219,7 +213,6 @@ class GraphRetriever:
             patterns = self.neo4j.execute_query(query, {"term": term})
             attack_patterns.extend(patterns)
 
-        # Remover duplicados (baseado no URI)
         unique_patterns = []
         uris = set()
         for pattern in attack_patterns:
@@ -240,7 +233,6 @@ class GraphRetriever:
         Returns:
             Lista de observáveis relevantes
         """
-        # Mapear tipos de entidades para classes na UCO
         entity_type_map = {
             "ip_addresses": ["IPAddress", "NetworkAddress"],
             "hostnames": ["Hostname", "Device", "Computer"],
@@ -250,13 +242,11 @@ class GraphRetriever:
             "commands": ["Action", "Command", "Process"],
         }
 
-        # Buscar observáveis para cada tipo de entidade
         observables = []
         for entity_type, values in entities.items():
             if not values:
                 continue
 
-            # Obter classes de observáveis relacionadas
             search_classes = entity_type_map.get(entity_type, [])
             for search_class in search_classes:
                 query = """
@@ -280,7 +270,6 @@ class GraphRetriever:
                 )
                 observables.extend(results)
 
-        # Remover duplicados (baseado no URI)
         unique_observables = []
         uris = set()
         for observable in observables:
@@ -307,7 +296,6 @@ class GraphRetriever:
         for pattern in attack_patterns:
             pattern_label = pattern["label"]
 
-            # Buscar mitigações relacionadas
             query = """
             MATCH (attack:Resource:owl__Class)-[r]-(mitigation:Resource:owl__Class)
             WHERE ANY(label IN attack.rdfs__label WHERE label CONTAINS $pattern_label)
@@ -354,7 +342,6 @@ class GraphRetriever:
 
             mitigations.extend(results)
 
-        # Remover duplicados
         unique_mitigations = []
         uris = set()
         for mitigation in mitigations:
@@ -393,7 +380,6 @@ class GraphRetriever:
             results = self.neo4j.execute_query(query, {"term": term})
             related_concepts.extend(results)
 
-        # Remover duplicados
         unique_concepts = []
         uris = set()
         for concept in related_concepts:

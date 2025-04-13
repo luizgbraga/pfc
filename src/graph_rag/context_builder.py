@@ -25,10 +25,8 @@ class ContextBuilder:
         Returns:
             String de contexto formatada para prompt do LLM
         """
-        # Recuperar informações relevantes do grafo de conhecimento
         graph_context = self.retriever.retrieve_for_incident(incident_data)
 
-        # Construir seções de contexto formatadas
         context_parts = []
 
         # 1. Seção de Tipo de Incidente
@@ -58,7 +56,6 @@ class ContextBuilder:
                 self._format_related_concepts(graph_context["related_concepts"])
             )
 
-        # Combinar todas as seções em uma única string de contexto
         full_context = "\n\n".join(context_parts)
 
         logger.info(f"Contexto construído com {len(context_parts)} seções")
@@ -113,7 +110,6 @@ class ContextBuilder:
 
         lines = ["### OBSERVÁVEIS RELEVANTES"]
 
-        # Agrupar observáveis por tipo
         grouped = {}
         for obs in observables:
             entity_type = obs.get("entity_type", "other")
@@ -121,7 +117,6 @@ class ContextBuilder:
                 grouped[entity_type] = []
             grouped[entity_type].append(obs)
 
-        # Formatar cada grupo
         for entity_type, obs_list in grouped.items():
             formatted_type = entity_type.replace("_", " ").title()
             lines.append(f"\n#### {formatted_type}")
@@ -131,7 +126,6 @@ class ContextBuilder:
                 if obs.get("description"):
                     obs_text.append(f"  Descrição: {obs['description']}")
 
-                # Adicionar valores de entidades se disponíveis
                 if "entity_values" in obs and obs["entity_values"]:
                     values = obs["entity_values"]
                     if isinstance(values, list) and values:
@@ -156,7 +150,6 @@ class ContextBuilder:
 
         lines = ["### MITIGAÇÕES RECOMENDADAS"]
 
-        # Agrupar mitigações por padrão de ataque relacionado
         grouped = {}
         for mitigation in mitigations:
             related_to = mitigation.get("related_to", "Geral")
@@ -164,7 +157,6 @@ class ContextBuilder:
                 grouped[related_to] = []
             grouped[related_to].append(mitigation)
 
-        # Formatar cada grupo
         for related_to, mitig_list in grouped.items():
             lines.append(f"\n#### Para {related_to}")
 
