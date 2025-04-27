@@ -1,31 +1,25 @@
 from typing import Any, Dict
 
-import openai
+import ollama
 from loguru import logger
 
-from config.settings import DEFAULT_LLM_MODEL, OPENAI_API_KEY
+from config.settings import DEFAULT_LLM_MODEL
 
 
 class LLMInterface:
-    """Interface para comunicação com Modelos de Linguagem Grandes."""
+    """Interface para comunicação com Modelos de Linguagem Grandes usando Ollama localmente."""
 
-    def __init__(self, model_name: str = None, api_key: str = None):
+    def __init__(self, model_name: str = None):
         """Inicializa a interface LLM.
 
         Args:
             model_name: Nome do modelo a ser usado
-            api_key: Chave de API para o serviço do modelo
         """
         self.model_name = model_name or DEFAULT_LLM_MODEL
-        self.api_key = api_key or OPENAI_API_KEY
 
-        if not self.api_key:
-            logger.warning(
-                "Nenhuma chave de API fornecida para LLM. Algumas funcionalidades podem ser limitadas."
-            )
-        else:
-            openai.api_key = self.api_key
-            logger.info(f"Interface LLM configurada com modelo {self.model_name}")
+        logger.info(
+            f"Interface LLM (Ollama) configurada com modelo '{self.model_name}'"
+        )
 
     def generate(
         self,
@@ -53,32 +47,26 @@ class LLMInterface:
 
             messages.append({"role": "user", "content": prompt})
 
-            logger.debug(f"Enviando prompt para LLM ({len(prompt)} caracteres)")
+            logger.debug(f"Enviando prompt para Ollama ({len(prompt)} caracteres)")
 
-            client = openai.OpenAI(api_key=self.api_key)
-
-            response = client.chat.completions.create(
+            response = ollama.chat(
                 model=self.model_name,
                 messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
+                options={
+                    "temperature": temperature,
+                    "num_predict": max_tokens,
+                },
             )
 
             result = {
-                "content": response.choices[0].message.content,
-                "model": response.model,
-                "usage": {
-                    "prompt_tokens": response.usage.prompt_tokens,
-                    "completion_tokens": response.usage.completion_tokens,
-                    "total_tokens": response.usage.total_tokens,
-                },
+                "content": response["message"]["content"],
+                "model": response["model"],
+                "usage": {},
             }
 
-            logger.info(
-                f"Resposta gerada: {result['usage']['completion_tokens']} tokens"
-            )
+            logger.info("Resposta gerada pelo Ollama.")
             return result
 
         except Exception as e:
-            logger.error(f"Erro ao gerar resposta LLM: {str(e)}")
+            logger.error(f"Erro ao gerar resposta LLM com Ollama: {str(e)}")
             return {"content": f"Erro: {str(e)}", "error": True}

@@ -10,7 +10,7 @@ NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "gpt-4")
+DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "llama2")
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 

