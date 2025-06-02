@@ -5,21 +5,21 @@ A tool for generating cyber security playbooks using Neo4j and Ollama.
 ## Quick Start
 
 ```bash
-# First time setup
-docker-compose up -d --build
+# Clone the repository
+https://github.com/luizgbraga/pfc.git
 
-# If the container is already built
-docker-compose up -d
+# Make the setup executable
+chmod +x ./scripts/setup.sh
 
-# Pull required models (only needed once)
-docker-compose exec ollama ollama pull llama3
+# Setup all containers and local LLMs
+./scripts/setup.sh
 ```
 
 ## Running Commands
 
 ```bash
 # Make the script executable (only needed once)
-chmod +x run.sh
+chmod +x ./scripts/run.sh
 
 # Run any command
 ./run.sh <command> [options]

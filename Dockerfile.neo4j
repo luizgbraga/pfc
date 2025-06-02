@@ -1,0 +1,11 @@
+FROM neo4j:5.9.0
+
+USER root
+
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+USER neo4j
+
+RUN curl -L https://github.com/neo4j-labs/neosemantics/releases/download/5.20.0/neosemantics-5.20.0.jar \
+    -o /var/lib/neo4j/plugins/neosemantics-5.20.0.jar
+
