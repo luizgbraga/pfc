@@ -2,6 +2,10 @@
 
 A tool for generating cyber security playbooks using Neo4j and Ollama.
 
+## Requirements
+- Git and Docker
+- ~3.8GB RAM free to run tinyllama (default)
+
 ## Quick Start
 
 ```bash
