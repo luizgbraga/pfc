@@ -26,7 +26,7 @@ chmod +x ./scripts/setup.sh
 chmod +x ./scripts/run.sh
 
 # Run any command
-./run.sh <command> [options]
+./scripts/run.sh <command> [options]
 ```
 
 ## Available Commands
