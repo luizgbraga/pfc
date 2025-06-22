@@ -1,9 +1,17 @@
 #!/bin/bash
 
-echo "=== Setting up UCO in Docker Neo4j ==="
-
-echo "1. Starting Docker containers..."
-docker-compose up -d
+if [[ "$1" == "--rebuild" ]]; then
+    echo "[Rebuild mode] Building Docker images without cache and forcing recreate..."
+    docker-compose build --no-cache
+    docker-compose up -d --force-recreate
+elif [[ -n "$1" && "$1" != "--rebuild" ]]; then
+    echo "Usage: $0 [--rebuild]"
+    exit 1
+else
+    echo "=== Setting up UCO in Docker Neo4j ==="
+    echo "1. Starting Docker containers..."
+    docker-compose up -d
+fi
 
 echo "2. Waiting for services to be ready..."
 sleep 30
@@ -28,3 +36,6 @@ echo "Summary:"
 echo "   - Neo4j: http://localhost:7474 (neo4j/pfcime2025)"
 echo "   - Ollama: http://localhost:11434"
 echo "   - Available models: $MODEL_NAME"
+echo "   - Flask server: http://localhost:5001"
+echo "   - MQ Consumer: running in background (see logs with 'docker-compose logs mq-consumer')"
+echo "      - RabbitMQ UI: http://localhost:15672"
