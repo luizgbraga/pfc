@@ -45,6 +45,45 @@ services:
       - ollama_data:/root/.ollama
     command: serve
 
+  flask-server:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=pfcime2025
+      - OLLAMA_HOST=http://ollama:11434
+      - FLASK_ENV=development
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    command: python server/app.py
+    ports:
+      - "5001:5001"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+
+  mq-consumer:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_QUEUE=alerts
+      - GENERATE_PLAYBOOK_URL=http://flask-server:5001/generate-playbook
+    depends_on:
+      - flask-server
+      - rabbitmq
+    command: python mq/consumer.py
+
 volumes:
   neo4j_data:
   neo4j_logs:
