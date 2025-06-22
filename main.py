@@ -281,17 +281,14 @@ def list_observables():
 
 @app.command()
 def generate_playbook(
-    alert_file: str = typer.Option(..., help="Arquivo JSON contendo dados do alerta"),
+    alert: str = typer.Option(None, help="Dados crus do alerta"),
     output_file: str = typer.Option(None, help="Arquivo para salvar o playbook gerado"),
     export: bool = typer.Option(False, help="Exportar para HTML após geração"),
     display: bool = typer.Option(False, help="Exibir no terminal após geração"),
 ):
     """Gera um playbook a partir de um alerta de segurança."""
     try:
-        with open(alert_file, "r") as f:
-            incident_data = json.load(f)
-
-        logger.info(f"Alerta carregado: {alert_file}")
+        incident_data = alert
 
         neo4j = Neo4jManager()
         graph_retriever = GraphRetriever(neo4j)
