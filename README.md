@@ -73,4 +73,7 @@ docker-compose down -v
 ```bash
 # See the logs of a specific container
 docker-compose logs [container-name]
+
+# See all running containers
+docker ps
 ```
