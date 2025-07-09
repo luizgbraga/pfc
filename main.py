@@ -8,12 +8,14 @@ import typer
 from loguru import logger
 
 from config.settings import LOG_LEVEL
-from src.graph_rag.context_builder import ContextBuilder
 from src.graph_rag.retriever import GraphRetriever
 from src.knowledge_graph.neo4j_manager import Neo4jManager
-from src.llm_orchestration.llm_interface import LLMInterface
-from src.llm_orchestration.prompt_manager import PromptManager
-from src.playbook_generator.formatter import PlaybookFormatter
+from src.llm_orchestration.llm_interface import (
+    invoke_explorer,
+    invoke_planner,
+    invoke_playbook,
+)
+from src.llm_orchestration.llms.openai_llm import OpenAILLM
 
 logger.remove()
 logger.add(sys.stderr, level=LOG_LEVEL)
@@ -280,6 +282,37 @@ def list_observables():
 
 
 @app.command()
+def list_all_nodes():
+    """Lista todos os nós do grafo UCO."""
+    try:
+        neo4j = Neo4jManager()
+
+        query = """
+        MATCH (n)
+        RETURN n.uri AS uri, n.rdfs__label[0] AS label, 
+               CASE WHEN n.rdfs__comment IS NULL THEN '' 
+                    ELSE n.rdfs__comment[0] END AS description
+        ORDER BY label
+        """
+
+        results = neo4j.execute_query(query)
+
+        print("\nTodos os nós no grafo UCO:\n")
+
+        for i, result in enumerate(results, 1):
+            print(f"{i}. {result['label']}")
+            if result["description"]:
+                desc = result["description"]
+                print(f"   {desc[:100]}..." if len(desc) > 100 else f"   {desc}")
+            print()
+
+        neo4j.close()
+
+    except Exception as e:
+        logger.error(f"Erro ao listar nós do grafo: {str(e)}")
+
+
+@app.command()
 def generate_playbook(
     alert: str = typer.Option(None, help="Dados crus do alerta"),
     output_file: str = typer.Option(None, help="Arquivo para salvar o playbook gerado"),
@@ -292,26 +325,48 @@ def generate_playbook(
 
         neo4j = Neo4jManager()
         graph_retriever = GraphRetriever(neo4j)
-        context_builder = ContextBuilder(graph_retriever)
-        llm = LLMInterface()
-        prompt_manager = PromptManager()
-        formatter = PlaybookFormatter()
+        # ollama_llm = OllamaLLM()
+        openai_llm = OpenAILLM()
 
-        logger.info("Recuperando conhecimento contextual do grafo UCO...")
-        graph_context = context_builder.build_context_for_incident(incident_data)
-
-        logger.info("Preparando prompt para LLM...")
-        prompt_data = prompt_manager.format_playbook_prompt(
-            incident_data, graph_context
+        planner = invoke_planner(
+            llm=openai_llm,
+            incident_data=str(incident_data),
         )
 
-        logger.info("Gerando playbook com LLM...")
-        llm_response = llm.generate(
-            prompt=prompt_data["prompt"], system_message=prompt_data["system_message"]
+        initial_subgraph = graph_retriever.build_initial_subgraph(planner.initial_nodes)
+
+        explorer = invoke_explorer(
+            llm=openai_llm,
+            incident_data=str(incident_data),
+            subgraph=initial_subgraph,
         )
 
-        logger.info("Formatando resposta em playbook estruturado...")
-        playbook = formatter.format_playbook(llm_response["content"], incident_data)
+        nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
+
+        i = 1
+        while len(nodes_to_expand) > 0:
+            if i > 10:
+                break
+            print(f"{i}) Expanding... ", nodes_to_expand)
+            subgraph = graph_retriever.expand_subgraph_from_leaves(
+                subgraph=initial_subgraph,
+                leaf_node_uris=nodes_to_expand,
+            )
+
+            explorer = invoke_explorer(
+                llm=openai_llm,
+                incident_data=str(incident_data),
+                subgraph=subgraph,
+            )
+
+            nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
+            i += 1
+
+        playbook = invoke_playbook(
+            llm=openai_llm,
+            incident_data=str(incident_data),
+            subgraph=subgraph,
+        )
 
         if not output_file:
             from datetime import datetime
@@ -320,17 +375,17 @@ def generate_playbook(
             output_file = f"playbook_{timestamp}.json"
 
         with open(output_file, "w") as f:
-            json.dump(playbook, f, indent=2)
+            json.dump(playbook.to_dict(), f, indent=2)
         logger.info(f"Playbook salvo em: {output_file}")
 
         neo4j.close()
 
-        if export:
-            html_output = output_file.replace(".json", ".html")
-            export_playbook(playbook_file=output_file, output_file=html_output)
+        # if export:
+        #     html_output = output_file.replace(".json", ".html")
+        #     export_playbook(playbook_file=output_file, output_file=html_output)
 
-        if display:
-            display_playbook(playbook_file=output_file)
+        # if display:
+        #     display_playbook(playbook_file=output_file)
 
     except Exception as e:
         logger.error(f"Erro ao gerar playbook: {str(e)}")
