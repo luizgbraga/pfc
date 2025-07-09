@@ -76,4 +76,7 @@ docker-compose logs [container-name]
 
 # See all running containers
 docker ps
+
+# See the ontology at
+http://localhost:7474/browser/
 ```
