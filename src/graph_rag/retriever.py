@@ -1,8 +1,30 @@
+from dataclasses import dataclass
 from typing import Any, Dict, List
 
 from loguru import logger
 
 from src.knowledge_graph.neo4j_manager import Neo4jManager
+
+MAX_DEPTH = 1
+
+
+@dataclass
+class Subgraph:
+    nodes: Dict[str, Dict[str, Any]]
+    relationships: List[Dict[str, Any]]
+    leaf_nodes: List[str]
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Converte o subgrafo para um dicionário.
+
+        Returns:
+            Dicionário representando o subgrafo
+        """
+        return {
+            "nodes": self.nodes,
+            "relationships": self.relationships,
+            "leaf_nodes": self.leaf_nodes,
+        }
 
 
 class GraphRetriever:
@@ -15,6 +37,240 @@ class GraphRetriever:
             neo4j_manager: Instância de Neo4jManager para operações no grafo
         """
         self.neo4j = neo4j_manager
+
+    def build_initial_subgraph(self, node_labels: List[str]) -> Subgraph:
+        """Constrói o subgrafo inicial do UCO contendo todos os nós da lista expandidos com DFS até MAX_DEPTH.
+
+        Args:
+            node_labels: Lista de labels dos nós para incluir no subgrafo
+
+        Returns:
+            Subgraph contendo nós, relacionamentos e nós folha
+        """
+        try:
+            # Buscar todos os nós que correspondem aos labels (filtrar blank nodes)
+            initial_nodes = []
+            for label in node_labels:
+                query = """
+                MATCH (n:Resource:owl__Class)
+                WHERE ANY(rdfs_label IN n.rdfs__label WHERE rdfs_label = $label)
+                AND NOT n.uri STARTS WITH 'bnode://'
+                AND n.rdfs__label IS NOT NULL
+                AND size(n.rdfs__label) > 0
+                RETURN n.uri AS uri, n.rdfs__label AS labels, 
+                       CASE WHEN n.rdfs__comment IS NULL THEN [] 
+                            ELSE n.rdfs__comment END AS comments
+                """
+                results = self.neo4j.execute_query(query, {"label": label})
+                if not results:
+                    # Se não encontrar correspondência exata, tentar busca por contém
+                    query = """
+                    MATCH (n:Resource:owl__Class)
+                    WHERE ANY(rdfs_label IN n.rdfs__label WHERE rdfs_label CONTAINS $label)
+                    AND NOT n.uri STARTS WITH 'bnode://'
+                    AND n.rdfs__label IS NOT NULL
+                    AND size(n.rdfs__label) > 0
+                    RETURN n.uri AS uri, n.rdfs__label AS labels, 
+                           CASE WHEN n.rdfs__comment IS NULL THEN [] 
+                                ELSE n.rdfs__comment END AS comments
+                    LIMIT 1
+                    """
+                    results = self.neo4j.execute_query(query, {"label": label})
+                initial_nodes.extend(results)
+
+            if not initial_nodes:
+                logger.warning(f"Nenhum nó encontrado para os labels: {node_labels}")
+                return Subgraph(nodes={}, relationships=[], leaf_nodes=[])
+
+            # URIs dos nós iniciais
+            initial_uris = [node["uri"] for node in initial_nodes]
+
+            # Expandir cada nó inicial com DFS até MAX_DEPTH
+            subgraph = self._expand_nodes_dfs(initial_uris, MAX_DEPTH)
+
+            logger.info(
+                f"Subgrafo inicial construído com {len(subgraph.nodes)} nós e {len(subgraph.relationships)} relacionamentos"
+            )
+            return subgraph
+
+        except Exception as e:
+            logger.error(f"Erro ao construir subgrafo inicial: {str(e)}")
+            return Subgraph(nodes={}, relationships=[], leaf_nodes=[])
+
+    def expand_subgraph_from_leaves(
+        self, subgraph: Subgraph, leaf_node_uris: List[str]
+    ) -> Subgraph:
+        """Expande o subgrafo existente a partir dos nós folha especificados.
+
+        Args:
+            subgraph: Subgrafo existente retornado por build_initial_subgraph ou chamadas anteriores
+            leaf_node_uris: Lista de URIs dos nós folha para expandir
+
+        Returns:
+            Subgrafo expandido com os novos nós e relacionamentos
+        """
+        try:
+            # Expandir os nós folha selecionados
+            expansion = self._expand_nodes_dfs(
+                leaf_node_uris, 1
+            )  # Expandir apenas 1 nível por vez
+
+            # Mesclar o subgrafo existente com a expansão
+            merged_subgraph = self._merge_subgraphs(subgraph, expansion)
+
+            logger.info(
+                f"Subgrafo expandido: {len(merged_subgraph.nodes)} nós, {len(merged_subgraph.relationships)} relacionamentos"
+            )
+            return merged_subgraph
+
+        except Exception as e:
+            logger.error(f"Erro ao expandir subgrafo: {str(e)}")
+            return subgraph
+
+    def _expand_nodes_dfs(self, start_uris: List[str], max_depth: int) -> Subgraph:
+        """Expande nós usando DFS até a profundidade máxima especificada.
+
+        Args:
+            start_uris: Lista de URIs dos nós iniciais
+            max_depth: Profundidade máxima para expansão
+
+        Returns:
+            Subgraph com nós, relacionamentos e nós folha
+        """
+        nodes = {}
+        relationships = []
+        visited = set()
+
+        # Inicializar com os nós iniciais na profundidade 0
+        nodes_by_depth = {0: start_uris.copy()}
+
+        # Adicionar nós iniciais
+        for uri in start_uris:
+            if uri not in visited:
+                visited.add(uri)
+
+                # Buscar informações do nó inicial
+                node_query = """
+                MATCH (n:Resource)
+                WHERE n.uri = $uri 
+                AND NOT n.uri STARTS WITH 'bnode://'
+                AND n.rdfs__label IS NOT NULL 
+                AND size(n.rdfs__label) > 0
+                RETURN n.uri AS uri, n.rdfs__label AS labels,
+                       CASE WHEN n.rdfs__comment IS NULL THEN []
+                            ELSE n.rdfs__comment END AS comments
+                """
+                node_results = self.neo4j.execute_query(node_query, {"uri": uri})
+
+                if node_results:
+                    node_data = node_results[0]
+                    nodes[uri] = {
+                        "uri": node_data["uri"],
+                        "labels": node_data["labels"] or [],
+                        "comments": node_data["comments"] or [],
+                        "depth": 0,
+                    }
+
+        # Expandir nível por nível
+        for depth in range(max_depth):
+            current_level_uris = nodes_by_depth.get(depth, [])
+            if not current_level_uris:
+                break
+
+            next_level_uris = []
+
+            for uri in current_level_uris:
+                # Buscar relacionamentos de saída (filtrar blank nodes dos targets)
+                rel_query = """
+                MATCH (start:Resource)-[r]->(target:Resource)
+                WHERE start.uri = $uri
+                AND NOT target.uri STARTS WITH 'bnode://'
+                AND target.rdfs__label IS NOT NULL
+                AND size(target.rdfs__label) > 0
+                RETURN target.uri AS target_uri, type(r) AS relationship_type,
+                       target.rdfs__label AS target_labels,
+                       CASE WHEN target.rdfs__comment IS NULL THEN []
+                            ELSE target.rdfs__comment END AS target_comments
+                LIMIT 20
+                """
+                rel_results = self.neo4j.execute_query(rel_query, {"uri": uri})
+
+                for rel in rel_results:
+                    target_uri = rel["target_uri"]
+
+                    # Adicionar relacionamento
+                    relationships.append(
+                        {
+                            "source": uri,
+                            "target": target_uri,
+                            "type": rel["relationship_type"],
+                        }
+                    )
+
+                    # Adicionar nó target se ainda não visitado
+                    if target_uri not in visited:
+                        visited.add(target_uri)
+                        next_level_uris.append(target_uri)
+
+                        # Adicionar o nó target com a profundidade correta (depth + 1)
+                        nodes[target_uri] = {
+                            "uri": target_uri,
+                            "labels": rel["target_labels"] or [],
+                            "comments": rel["target_comments"] or [],
+                            "depth": depth + 1,
+                        }
+
+            # Preparar para o próximo nível
+            if next_level_uris:
+                nodes_by_depth[depth + 1] = next_level_uris
+
+        # Identificar nós folha (nós que não têm relacionamentos de saída no subgrafo)
+        leaf_nodes = []
+        for uri in nodes.keys():
+            has_outgoing = any(rel["source"] == uri for rel in relationships)
+            if not has_outgoing:
+                leaf_nodes.append(uri)
+
+        return Subgraph(nodes=nodes, relationships=relationships, leaf_nodes=leaf_nodes)
+
+    def _merge_subgraphs(self, subgraph1: Subgraph, subgraph2: Subgraph) -> Subgraph:
+        """Mescla dois subgrafos em um único subgrafo.
+
+        Args:
+            subgraph1: Primeiro subgrafo
+            subgraph2: Segundo subgrafo
+
+        Returns:
+            Subgrafo mesclado
+        """
+        # Mesclar nós
+        merged_nodes = subgraph1.nodes.copy()
+        merged_nodes.update(subgraph2.nodes)
+
+        # Mesclar relacionamentos (evitar duplicatas)
+        merged_relationships = subgraph1.relationships.copy()
+        existing_rels = {
+            (rel["source"], rel["target"], rel["type"]) for rel in merged_relationships
+        }
+
+        for rel in subgraph2.relationships:
+            rel_key = (rel["source"], rel["target"], rel["type"])
+            if rel_key not in existing_rels:
+                merged_relationships.append(rel)
+                existing_rels.add(rel_key)
+
+        # Recalcular nós folha no subgrafo mesclado
+        leaf_nodes = []
+        for uri in merged_nodes.keys():
+            has_outgoing = any(rel["source"] == uri for rel in merged_relationships)
+            if not has_outgoing:
+                leaf_nodes.append(uri)
+
+        return Subgraph(
+            nodes=merged_nodes,
+            relationships=merged_relationships,
+            leaf_nodes=leaf_nodes,
+        )
 
     def retrieve_for_incident(self, incident_data: Dict[str, Any]) -> Dict[str, Any]:
         """Recupera contexto relevante do grafo de conhecimento para um incidente de segurança.
