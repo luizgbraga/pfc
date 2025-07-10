@@ -1,10 +1,20 @@
-from flask import Blueprint, abort, jsonify, request
+import os
+
+from flask import Blueprint, abort, jsonify, request, send_from_directory
 
 from server.controllers import (
     generate_playbook_controller,
 )
 
 routes = Blueprint("routes", __name__)
+
+
+@routes.route("/")
+def index():
+    """Serve the HTML frontend"""
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), "static"), "index.html"
+    )
 
 
 @routes.route("/generate-playbook", methods=["POST"])

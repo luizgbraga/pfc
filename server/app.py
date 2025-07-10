@@ -2,7 +2,8 @@ from flask import Flask
 
 from server.routes import routes
 
-app = Flask(__name__)
+# Set up Flask app with static files
+app = Flask(__name__, static_folder="static", static_url_path="/static")
 app.register_blueprint(routes)
 
 if __name__ == "__main__":
