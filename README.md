@@ -60,8 +60,6 @@ chmod +x ./scripts/run.sh
 - `analyze-ontology`
 - `list-observables`
 - `generate-playbook`
-- `export-playbook`
-- `display-playbook`
 
 ## Stopping the Services
 
