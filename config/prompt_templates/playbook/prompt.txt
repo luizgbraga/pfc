@@ -90,7 +90,9 @@ Assim, o objeto {{"foo": ["bar", "baz"]}} está corretamente formatado segundo e
 
 Sua saída será analisada e validada de acordo com o schema fornecido, portanto, certifique-se de que todos os campos da sua saída correspondam exatamente ao schema, sem vírgulas finais!
 
-A resposta DEVE SEGUIR o JSON Schema abaixo, sem mais nenhum texto ou informação, SOMENTE O JSON:
+A resposta DEVE SEGUIR o JSON Schema abaixo, sem mais nenhum texto ou informação, SOMENTE O JSON.
+Inclua o markdown ```json [conteúdo] ``` ao redor do JSON.
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
