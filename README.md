@@ -4,7 +4,7 @@ A tool for generating cyber security playbooks using Neo4j and Ollama.
 
 ## Requirements
 - Git and Docker
-- ~3.8GB RAM free to run tinyllama (default)
+- ~3.5GB RAM free to run deepseek-r1:1.5b-qwen-distill-q8_0 (default)
 
 ## Quick Start
 
@@ -36,7 +36,12 @@ This will simulate an alert being sent to the message queue for processing
 # Produce a mock message to the queue
 python mq/fake_producer.py
 ```
-
+This will actually send an alert to the server endpoint, which will enqueue it
+```bash
+curl -X POST http://localhost:5001/generate-playbook \
+                                          -H "Content-Type: application/json" \
+                                          -d '{"alert":{"alert_name":"Suspicious Login Attempt","incident_type":"Unauthorized Access","severity":"High","source_ip":"192.168.1.100","destination_ip":"10.0.0.5","hostname":"server01","user":"alice","description":"Multiple failed login attempts detected from unusual location.","timestamp":"2024-06-01T12:34:56Z","logs":"Failed password for alice from 192.168.1.100 port 22 ssh2"},"output_file":null,"export":false,"display":true}'
+```
 It is also possible to run commands directly via terminal
 ```bash
 # Make the script executable (only needed once)
@@ -80,3 +85,4 @@ docker ps
 # See the ontology at
 http://localhost:7474/browser/
 ```
+A nice flow of development is to first `curl` the alert into the endpoint and then check the logs of `flask-server` and `mq-consumer`.
