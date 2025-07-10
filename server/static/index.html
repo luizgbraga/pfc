@@ -231,21 +231,17 @@
             const submitBtn = document.getElementById('submitBtn');
             const result = document.getElementById('result');
             
-            // Disable submit button
             submitBtn.disabled = true;
             submitBtn.textContent = 'Generating...';
             
-            // Hide previous results
             result.style.display = 'none';
             
             try {
-                // Get form data
                 const alertText = document.getElementById('alert').value;
                 const outputFile = document.getElementById('output_file').value;
                 const exportChecked = document.getElementById('export').checked;
                 const displayChecked = document.getElementById('display').checked;
                 
-                // Parse alert JSON
                 let alertData;
                 try {
                     alertData = JSON.parse(alertText);
@@ -253,7 +249,6 @@
                     throw new Error('Invalid JSON format in alert field');
                 }
                 
-                // Prepare request data
                 const requestData = {
                     alert: alertData,
                     output_file: outputFile || null,
@@ -261,7 +256,6 @@
                     display: displayChecked
                 };
                 
-                // Make API call
                 const response = await fetch('/generate-playbook', {
                     method: 'POST',
                     headers: {
@@ -293,11 +287,9 @@
                     ${error.message}
                 `;
             } finally {
-                // Re-enable submit button
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Generate Playbook';
                 
-                // Show result
                 result.style.display = 'block';
             }
         });
