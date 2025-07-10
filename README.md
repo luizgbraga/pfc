@@ -8,6 +8,7 @@ A tool for generating cyber security playbooks using Neo4j and Ollama.
 
 ## Quick Start
 
+### macOS/Linux
 ```bash
 # Clone the repository
 git clone https://github.com/luizgbraga/pfc.git
@@ -23,7 +24,37 @@ chmod +x ./scripts/setup.sh
 http://localhost:5001
 ```
 
-To ignore cache, add the `--rebuild` option when running `setup.sh`
+### Windows (Command Prompt)
+```bash
+# Clone the repository
+git clone https://github.com/luizgbraga/pfc.git
+cd pfc
+
+# Setup all containers and local LLMs
+scripts\setup.bat
+
+# Access the UI frontend at
+http://localhost:5001
+```
+
+### Windows (PowerShell) - Recommended
+```bash
+# Clone the repository
+git clone https://github.com/luizgbraga/pfc.git
+cd pfc
+
+# Setup all containers and local LLMs
+.\scripts\setup.ps1
+
+# Access the UI frontend at
+http://localhost:5001
+```
+
+### Rebuild Option
+To ignore cache and force rebuild, add the `--rebuild` option:
+- **macOS/Linux**: `./scripts/setup.sh --rebuild`
+- **Windows (CMD)**: `scripts\setup.bat --rebuild`
+- **Windows (PowerShell)**: `.\scripts\setup.ps1 -Rebuild`
 
 This will start the following containers:
 - **neo4j**: Graph database for storing cybersecurity ontology (UCO) and data (ports 7474, 7687)
@@ -45,13 +76,21 @@ curl -X POST http://localhost:5001/generate-playbook \
                                           -H "Content-Type: application/json" \
                                           -d '{"alert":{"alert_name":"Suspicious Login Attempt","incident_type":"Unauthorized Access","severity":"High","source_ip":"192.168.1.100","destination_ip":"10.0.0.5","hostname":"server01","user":"alice","description":"Multiple failed login attempts detected from unusual location.","timestamp":"2024-06-01T12:34:56Z","logs":"Failed password for alice from 192.168.1.100 port 22 ssh2"},"output_file":null,"export":false,"display":true}'
 ```
-It is also possible to run commands directly via terminal
+It is also possible to run commands directly via terminal:
+
+### macOS/Linux
 ```bash
 # Make the script executable (only needed once)
 chmod +x ./scripts/run.sh
 
 # Run any command
 ./scripts/run.sh <command> [options]
+```
+
+### Windows
+```bash
+# Run any command via Docker directly
+docker-compose exec app python main.py <command> [options]
 ```
 
 ## Available Commands

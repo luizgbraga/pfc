@@ -1,4 +1,23 @@
 #!/bin/bash
+set -e
+
+check_docker() {
+    if ! docker info >/dev/null 2>&1; then
+        echo "Docker is not running. Please start Docker Desktop and try again."
+        exit 1
+    fi
+}
+
+check_docker_compose() {
+    if ! command -v docker-compose >/dev/null 2>&1; then
+        echo "docker-compose is not available. Please install Docker Desktop."
+        exit 1
+    fi
+}
+
+echo "Checking prerequisites..."
+check_docker
+check_docker_compose
 
 if [[ "$1" == "--rebuild" ]]; then
     echo "[Rebuild mode] Building Docker images without cache and forcing recreate..."
@@ -17,19 +36,25 @@ echo "2. Waiting for services to be ready..."
 sleep 30
 
 echo "3. Pulling the LLM model..."
-MODEL_NAME=$(docker-compose exec app python -c "from config.settings import DEFAULT_LLM_MODEL; print(DEFAULT_LLM_MODEL)" 2>/dev/null | tr -d '\r\n')
+MODEL_NAME=$(docker-compose exec app python -c "from config.settings import DEFAULT_OLLAMA_LLM_MODEL; print(DEFAULT_OLLAMA_LLM_MODEL)" 2>/dev/null | tr -d '\r\n')
 if [ -z "$MODEL_NAME" ]; then
     MODEL_NAME="deepseek-r1:1.5b-qwen-distill-q8_0"
 fi
 
 echo "   Pulling model: $MODEL_NAME"
-docker-compose exec ollama ollama pull $MODEL_NAME
+if ! docker-compose exec ollama ollama pull $MODEL_NAME; then
+    echo "Warning: Could not pull model. You might need to wait for Ollama service to be ready."
+fi
 
 echo "4. Importing UCO ontology..."
-docker-compose exec app python scripts/import_uco_to_docker.py
+if ! docker-compose exec app python scripts/import_uco_to_docker.py; then
+    echo "Warning: UCO import failed. You might need to run this manually later."
+fi
 
 echo "5. Verifying the setup..."
-docker-compose exec app python main.py list-key-concepts --limit 5
+if ! docker-compose exec app python main.py list-key-concepts --limit 5; then
+    echo "Warning: Setup verification failed. Check the logs for details."
+fi
 
 echo "Setup complete!"
 echo "Summary:"
