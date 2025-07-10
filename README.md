@@ -18,6 +18,9 @@ chmod +x ./scripts/setup.sh
 
 # Setup all containers and local LLMs
 ./scripts/setup.sh
+
+# Access the UI frontend at
+http://localhost:5001
 ```
 
 To ignore cache, add the `--rebuild` option when running `setup.sh`
