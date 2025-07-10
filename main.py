@@ -15,7 +15,7 @@ from src.llm_orchestration.llm_interface import (
     invoke_planner,
     invoke_playbook,
 )
-from src.llm_orchestration.llms.openai_llm import OpenAILLM
+from src.llm_orchestration.llms.ollama_llm import OllamaLLM
 
 logger.remove()
 logger.add(sys.stderr, level=LOG_LEVEL)
@@ -325,18 +325,18 @@ def generate_playbook(
 
         neo4j = Neo4jManager()
         graph_retriever = GraphRetriever(neo4j)
-        # ollama_llm = OllamaLLM()
-        openai_llm = OpenAILLM()
+        llm = OllamaLLM()
+        # llm = OpenAILLM()
 
         planner = invoke_planner(
-            llm=openai_llm,
+            llm=llm,
             incident_data=str(incident_data),
         )
 
         initial_subgraph = graph_retriever.build_initial_subgraph(planner.initial_nodes)
 
         explorer = invoke_explorer(
-            llm=openai_llm,
+            llm=llm,
             incident_data=str(incident_data),
             subgraph=initial_subgraph,
         )
@@ -354,7 +354,7 @@ def generate_playbook(
             )
 
             explorer = invoke_explorer(
-                llm=openai_llm,
+                llm=llm,
                 incident_data=str(incident_data),
                 subgraph=subgraph,
             )
@@ -363,7 +363,7 @@ def generate_playbook(
             i += 1
 
         playbook = invoke_playbook(
-            llm=openai_llm,
+            llm=llm,
             incident_data=str(incident_data),
             subgraph=subgraph,
         )

@@ -78,9 +78,19 @@ Seja técnico e prático, não genérico.
 - Evite qualquer ambiguidade
 - Fundamente as decisões na ontologia de segurança e nos elementos fornecidos
 
-# FORMATO DA RESPOSTA
-Responda NECESSARIAMENTE sempre seguindo o JSON Schema abaixo:
+# FORMATO DA RESPOSTA (IMPORTANTE)
+Você deve formatar sua saída como um valor JSON que esteja em conformidade com uma instância de "JSON Schema" fornecida.
+Não inclua NENHUM outro texto na sua saída, apenas siga ESTRITAMENTE a instância de "JSON Schema" fornecida abaixo.
 
+"JSON Schema" é uma linguagem declarativa que permite anotar e validar documentos JSON.
+
+Por exemplo, a instância de "JSON Schema" {{"properties": {{"foo": {{"description": "uma lista de palavras de teste", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
+corresponde a um objeto com uma propriedade obrigatória, "foo". A propriedade "type" especifica que "foo" deve ser um "array", e a propriedade "description" descreve semanticamente como uma lista de palavras de teste. Os itens dentro de "foo" devem ser strings.
+Assim, o objeto {{"foo": ["bar", "baz"]}} está corretamente formatado segundo esse "JSON Schema". O objeto {{"properties": {{"foo": ["bar", "baz"]}}}} não está.
+
+Sua saída será analisada e validada de acordo com o schema fornecido, portanto, certifique-se de que todos os campos da sua saída correspondam exatamente ao schema, sem vírgulas finais!
+
+A resposta DEVE SEGUIR o JSON Schema abaixo, sem mais nenhum texto ou informação, SOMENTE O JSON:
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",

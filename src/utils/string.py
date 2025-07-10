@@ -1,25 +1,24 @@
 import json
+import re
 
 
 def clean_json(json_str: str) -> str:
     """
-    Cleans a JSON string by removing code block markers and leading/trailing whitespace.
+    Extracts JSON content from markdown code blocks (```json ... ```).
 
     Args:
-        json_str (str): The JSON string to clean.
+        json_str (str): The string containing JSON markdown.
 
     Returns:
-        str: The cleaned JSON string.
+        str: The parsed JSON as a dictionary.
     """
-    cleaned = json_str.strip()
-    if cleaned.startswith("```json"):
-        cleaned = cleaned[7:]
-    if cleaned.startswith("```"):
-        cleaned = cleaned[3:]
-    if cleaned.endswith("```"):
-        cleaned = cleaned[:-3]
-    cleaned = cleaned.strip()
-
-    cleaned_dict = json.loads(cleaned)
-
+    pattern = r'```json\s*(.*?)\s*```'
+    match = re.search(pattern, json_str, flags=re.DOTALL)
+    
+    if match:
+        json_content = match.group(1).strip()
+    else:
+        raise ValueError("No valid JSON content found in the provided string.")
+    
+    cleaned_dict = json.loads(json_content)
     return cleaned_dict

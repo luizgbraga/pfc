@@ -27,7 +27,7 @@ class OllamaLLM(LLM):
         self,
         prompt: str,
         system_message: str = None,
-        temperature: float = 0.2,
+        temperature: float = 0.1,
         max_tokens: int = 2000,
     ) -> Dict[str, Any]:
         try:
@@ -50,7 +50,7 @@ class OllamaLLM(LLM):
                 "usage": {},
             }
             logger.info("Resposta gerada pelo Ollama.")
-            return result
+            return result["content"]
         except Exception as e:
             logger.error(f"Erro ao gerar resposta LLM com Ollama: {str(e)}")
             return {"content": f"Erro: {str(e)}", "error": True}

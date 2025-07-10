@@ -6,7 +6,6 @@ Seu papel é auxiliar em uma exploração progressiva do grafo: a partir de uma 
 Você deve retornar a lista dos nós que deseja expandir, e a partir deles será feito um DFS para obter mais contexto. Se as informações atuais já forem suficientes, você retorna uma lista vazia.
 
 # INSTRUÇÕES
-
 1. Você receberá:
   - Um **subgrafo parcial** com nós e arestas (resultado de uma busca DFS com profundidade limitada)
   - Um **contexto investigativo**, incluindo:
@@ -15,13 +14,23 @@ Você deve retornar a lista dos nós que deseja expandir, e a partir deles será
 
 2. Analise o conteúdo do grafo:
   - Identifique padrões, relações incompletas, ou pistas promissoras que merecem ser aprofundadas.
-  - Proponha **quais nós específicos devem ser expandidos.
+  - Proponha **quais nós** específicos devem ser expandidos.
 
 3. Se você achar que a informação atual já é suficiente para responder à questão investigativa, retorne uma lista **vazia**.
 
-# FORMATO DE RESPOSTA
-Responda NECESSARIAMENTE seguindo o JSON Schema abaixo:
+# FORMATO DA RESPOSTA (IMPORTANTE)
+Você deve formatar sua saída como um valor JSON que esteja em conformidade com uma instância de "JSON Schema" fornecida.
+Não inclua NENHUM outro texto na sua saída, apenas siga ESTRITAMENTE a instância de "JSON Schema" fornecida abaixo.
 
+"JSON Schema" é uma linguagem declarativa que permite anotar e validar documentos JSON.
+
+Por exemplo, a instância de "JSON Schema" {{"properties": {{"foo": {{"description": "uma lista de palavras de teste", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
+corresponde a um objeto com uma propriedade obrigatória, "foo". A propriedade "type" especifica que "foo" deve ser um "array", e a propriedade "description" descreve semanticamente como uma lista de palavras de teste. Os itens dentro de "foo" devem ser strings.
+Assim, o objeto {{"foo": ["bar", "baz"]}} está corretamente formatado segundo esse "JSON Schema". O objeto {{"properties": {{"foo": ["bar", "baz"]}}}} não está.
+
+Sua saída será analisada e validada de acordo com o schema fornecido, portanto, certifique-se de que todos os campos da sua saída correspondam exatamente ao schema, sem vírgulas finais!
+
+A resposta DEVE SEGUIR o JSON Schema abaixo, sem mais nenhum texto ou informação, SOMENTE O JSON:
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -30,13 +39,13 @@ Responda NECESSARIAMENTE seguindo o JSON Schema abaixo:
   "properties": {
     "nodes_to_expand": {
       "type": "array",
-      "description": "Lista de nós que devem ser expandidos",
+      "description": "Lista de nós que devem ser expandidos PRESENTES NOS leaf_nodes",
       "items": {
         "type": "object",
         "properties": {
           "node_uri": {
             "type": "string",
-            "description": "Identificador único do nó a ser expandido"
+            "description": "Identificador único do nó a ser expandido, DEVE ESTAR ENTRE OS leaf_nodes DO SUBGRAFO"
           },
           "reason": {
             "type": "string",

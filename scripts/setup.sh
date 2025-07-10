@@ -19,7 +19,7 @@ sleep 30
 echo "3. Pulling the LLM model..."
 MODEL_NAME=$(docker-compose exec app python -c "from config.settings import DEFAULT_LLM_MODEL; print(DEFAULT_LLM_MODEL)" 2>/dev/null | tr -d '\r\n')
 if [ -z "$MODEL_NAME" ]; then
-    MODEL_NAME="tinyllama"
+    MODEL_NAME="deepseek-r1:1.5b-qwen-distill-q8_0"
 fi
 
 echo "   Pulling model: $MODEL_NAME"

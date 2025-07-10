@@ -21,9 +21,21 @@ Os nós da ontologia UCO estão listados abaixo, divididos em 15 categorias:
 10. Dispositivos: Device, MobileDevice, Memory, SIMCard
 11. Geolocalização GeoLocationLog, GeoLocationEntry, GeoLocationTrack
 
-# FORMATO DA RESPOSTA
-Responda NECESSARIAMENTE sempre seguindo o JSON Schema abaixo:
+MEMORIZE esse nós pois você precisará escolher os mais relevantes para iniciar sua investigação.
 
+# FORMATO DA RESPOSTA (IMPORTANTE)
+Você deve formatar sua saída como um valor JSON que esteja em conformidade com uma instância de "JSON Schema" fornecida.
+Não inclua NENHUM outro texto na sua saída, apenas siga ESTRITAMENTE a instância de "JSON Schema" fornecida abaixo.
+
+"JSON Schema" é uma linguagem declarativa que permite anotar e validar documentos JSON.
+
+Por exemplo, a instância de "JSON Schema" {{"properties": {{"foo": {{"description": "uma lista de palavras de teste", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
+corresponde a um objeto com uma propriedade obrigatória, "foo". A propriedade "type" especifica que "foo" deve ser um "array", e a propriedade "description" descreve semanticamente como uma lista de palavras de teste. Os itens dentro de "foo" devem ser strings.
+Assim, o objeto {{"foo": ["bar", "baz"]}} está corretamente formatado segundo esse "JSON Schema". O objeto {{"properties": {{"foo": ["bar", "baz"]}}}} não está.
+
+Sua saída será analisada e validada de acordo com o schema fornecido, portanto, certifique-se de que todos os campos da sua saída correspondam exatamente ao schema, sem vírgulas finais!
+
+A resposta DEVE SEGUIR o JSON Schema abaixo, sem mais nenhum texto ou informação, SOMENTE O JSON:
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -38,10 +50,11 @@ Responda NECESSARIAMENTE sempre seguindo o JSON Schema abaixo:
       "type": "array",
       "items": {
         "type": "string",
-        "description": "Nome dos nós iniciais no grafo UCO"
+        "description": "Nome dos nós iniciais DA ONTOLOGIA UCO, NÃO UTILIZE NÓS QUE NÃO ESTEJAM NA ONTOLOGIA"
       },
       "minItems": 1,
-      "description": "Lista de nós sugeridos para iniciar a investigação"
+      "description": "Lista de nós sugeridos para iniciar a investigação, DEVEM SER NÓS DA ONTOLOGIA UCO",
+      "enum": ["Process", "UNIXProcess", "WindowsProcess", "OperatingSystem", "Thread", "WindowsThread", "WindowsEvent", "WindowsService", "WindowsTask", "WindowsCriticalSection", "WindowsSystemRestore", "WindowsHandle", "WindowsHook", "Event", "EventLog", "Mutex", "Semaphore", "Snapshot", "UserSession", "WindowsWaitableTime", "ComputerSpecification", "WindowsComputerSpecification", "Account", "UserAccount", "ApplicationAccount", "EmailAccount", "DigitalAccount", "MobileAccount", "UNIXAccount", "WindowsAccount", "WindowsActiveDirectoryAccount", "PhoneAccount", "Credential", "CredentialDump", "Contact", "ContactList", "Profile", "PaymentCard", "SIMCard"]
     },
     "exploration_plan": {
       "type": "array",
