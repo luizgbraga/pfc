@@ -1,49 +1,49 @@
-from main import (
-    analyze_ontology,
-    display_playbook,
-    explore_ontology,
-    export_playbook,
-    generate_playbook,
-    list_key_concepts,
-    list_observables,
-    list_relationship_types,
-    test_neo4j_connection,
-)
+import json
+import os
 
+import pika
 
-def test_neo4j_connection_controller():
-    return test_neo4j_connection()
-
-
-def explore_ontology_controller(search_term):
-    return explore_ontology(search_term=search_term)
-
-
-def list_key_concepts_controller(limit):
-    return list_key_concepts(limit=limit)
-
-
-def list_relationship_types_controller():
-    return list_relationship_types()
-
-
-def analyze_ontology_controller():
-    return analyze_ontology()
-
-
-def list_observables_controller():
-    return list_observables()
+RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST")
+RABBITMQ_QUEUE = os.environ.get("RABBITMQ_QUEUE")
+RABBITMQ_USER = os.environ.get("RABBITMQ_USER")
+RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS")
 
 
 def generate_playbook_controller(alert, output_file, export, display):
-    return generate_playbook(
-        alert=alert, output_file=output_file, export=export, display=display
-    )
+    """Send alert to queue for processing instead of calling main function directly."""
+    try:
+        print(
+            f"[DEBUG] Attempting to connect to RabbitMQ at {RABBITMQ_HOST} with user {RABBITMQ_USER}"
+        )
 
+        message = {
+            "alert": alert,
+            "output_file": output_file,
+            "export": export,
+            "display": display,
+        }
 
-def export_playbook_controller(playbook_file, output_file):
-    return export_playbook(playbook_file=playbook_file, output_file=output_file)
+        credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=credentials)
+        )
+        channel = connection.channel()
+        channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
+        channel.basic_publish(
+            exchange="",
+            routing_key=RABBITMQ_QUEUE,
+            body=json.dumps(message),
+            properties=pika.BasicProperties(delivery_mode=2),  # make message persistent
+        )
 
+        connection.close()
 
-def display_playbook_controller(playbook_file):
-    return display_playbook(playbook_file=playbook_file)
+        return {
+            "status": "success",
+            "message": f"Alert sent to queue '{RABBITMQ_QUEUE}' for processing",
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to send alert to queue: {str(e)}",
+        }

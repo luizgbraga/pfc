@@ -98,7 +98,9 @@ def build_explorer_prompt(incident_data: str, subgraph: Subgraph) -> str:
         ensure_ascii=False,
         indent=2,
     )
-    explorer_prompt += "Os nós escolhidos para a expansão DEVEM SER os LEAF_NODES do subgrafo atual.\n"
+    explorer_prompt += (
+        "Os nós escolhidos para a expansão DEVEM SER os LEAF_NODES do subgrafo atual.\n"
+    )
     explorer_prompt += f"Logo, escolha somente entre os nós da lista: {', '.join(subgraph.leaf_nodes)}\n"
     explorer_prompt += "\n\n- Dados do incidente:\n" + incident_data
 

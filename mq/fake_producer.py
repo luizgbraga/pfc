@@ -3,10 +3,10 @@ import os
 
 import pika
 
-RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST", "localhost")
-RABBITMQ_QUEUE = os.environ.get("RABBITMQ_QUEUE", "alerts")
-RABBITMQ_USER = os.environ.get("RABBITMQ_USER", "user")
-RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS", "password")
+RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST")
+RABBITMQ_QUEUE = os.environ.get("RABBITMQ_QUEUE")
+RABBITMQ_USER = os.environ.get("RABBITMQ_USER")
+RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS")
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
         "timestamp": "2024-06-01T12:34:56Z",
         "logs": "Failed password for alice from 192.168.1.100 port 22 ssh2",
     }
-    message = {"alert": alert}
+    message = {"alert": alert, "output_file": None, "export": False, "display": True}
 
     credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
     connection = pika.BlockingConnection(

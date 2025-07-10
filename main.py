@@ -1,8 +1,5 @@
 import json
-import os
-import re
 import sys
-from typing import Optional
 
 import typer
 from loguru import logger
@@ -15,7 +12,7 @@ from src.llm_orchestration.llm_interface import (
     invoke_planner,
     invoke_playbook,
 )
-from src.llm_orchestration.llms.ollama_llm import OllamaLLM
+from src.llm_orchestration.llms.openai_llm import OpenAILLM
 
 logger.remove()
 logger.add(sys.stderr, level=LOG_LEVEL)
@@ -325,8 +322,8 @@ def generate_playbook(
 
         neo4j = Neo4jManager()
         graph_retriever = GraphRetriever(neo4j)
-        llm = OllamaLLM()
-        # llm = OpenAILLM()
+        # llm = OllamaLLM()
+        llm = OpenAILLM()
 
         planner = invoke_planner(
             llm=llm,
@@ -380,145 +377,8 @@ def generate_playbook(
 
         neo4j.close()
 
-        # if export:
-        #     html_output = output_file.replace(".json", ".html")
-        #     export_playbook(playbook_file=output_file, output_file=html_output)
-
-        # if display:
-        #     display_playbook(playbook_file=output_file)
-
     except Exception as e:
         logger.error(f"Erro ao gerar playbook: {str(e)}")
-
-
-@app.command()
-def export_playbook(
-    playbook_file: str = typer.Option(..., help="Arquivo JSON do playbook"),
-    output_file: Optional[str] = typer.Option(None, help="Arquivo HTML de saída"),
-):
-    """Exporta um playbook para HTML para visualização."""
-    try:
-        from src.playbook_generator.html_exporter import PlaybookHTMLExporter
-
-        html_path = PlaybookHTMLExporter.export_to_html(playbook_file, output_file)
-
-        print(f"Playbook exportado para HTML: {html_path}")
-        print(
-            "Abra este arquivo em seu navegador para visualizar o playbook formatado."
-        )
-
-        import webbrowser
-
-        webbrowser.open("file://" + os.path.abspath(html_path))
-
-    except Exception as e:
-        logger.error(f"Erro ao exportar playbook: {str(e)}")
-
-
-@app.command()
-def display_playbook(
-    playbook_file: str = typer.Option(..., help="Arquivo JSON do playbook"),
-):
-    """Exibe um playbook formatado no terminal."""
-    try:
-        with open(playbook_file, "r") as f:
-            playbook = json.load(f)
-
-        BOLD = "\033[1m"
-        BLUE = "\033[94m"
-        GREEN = "\033[92m"
-        YELLOW = "\033[93m"
-        RED = "\033[91m"
-        CYAN = "\033[96m"
-        RESET = "\033[0m"
-
-        def clean_markdown(text):
-            cleaned = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-            cleaned = cleaned.replace("**", "")
-            return cleaned
-
-        print("\n" + "=" * 80)
-        print(f"{BOLD}{BLUE}PLAYBOOK DE RESPOSTA A INCIDENTES{RESET}")
-        print(
-            f"{BOLD}Alerta:{RESET} {playbook['metadata'].get('alert_name', 'Alerta de Segurança')}"
-        )
-        print("=" * 80)
-
-        print(f"\n{BOLD}{BLUE}METADADOS:{RESET}")
-        print(
-            f"{BOLD}Tipo de Incidente:{RESET} {playbook['metadata'].get('incident_type', 'Não especificado')}"
-        )
-        severity = playbook["metadata"].get("severity", "Medium")
-
-        if severity.lower() == "high":
-            print(f"{BOLD}Severidade:{RESET} {RED}{severity}{RESET}")
-        elif severity.lower() == "medium":
-            print(f"{BOLD}Severidade:{RESET} {YELLOW}{severity}{RESET}")
-        else:
-            print(f"{BOLD}Severidade:{RESET} {GREEN}{severity}{RESET}")
-
-        print(
-            f"{BOLD}IP de Origem:{RESET} {playbook['metadata'].get('source_ip', 'N/A')}"
-        )
-        print(
-            f"{BOLD}IP de Destino:{RESET} {playbook['metadata'].get('destination_ip', 'N/A')}"
-        )
-        print(f"{BOLD}Hostname:{RESET} {playbook['metadata'].get('hostname', 'N/A')}")
-        print(f"{BOLD}Usuário:{RESET} {playbook['metadata'].get('user', 'N/A')}")
-
-        section_titles = {
-            "resumo": "RESUMO DO INCIDENTE",
-            "investigacao": "PASSOS DE INVESTIGAÇÃO",
-            "contencao": "PROCEDIMENTOS DE CONTENÇÃO",
-            "erradicacao": "PASSOS DE ERRADICAÇÃO",
-            "recuperacao": "PROCEDIMENTOS DE RECUPERAÇÃO",
-            "prevencao": "LIÇÕES APRENDIDAS E PREVENÇÃO",
-        }
-
-        for section_key, section_steps in playbook["sections"].items():
-            if section_key.startswith("playbook_") or "_de_" in section_key:
-                continue
-
-            section_title = section_titles.get(section_key, section_key.upper())
-
-            print(f"\n{BOLD}{BLUE}{section_title}{RESET}")
-            print("-" * 80)
-
-            for i, step in enumerate(section_steps, 1):
-                title = step.get("title", step.get("description", ""))
-                title = clean_markdown(title)
-
-                print(f"{BOLD}{i}. {title}{RESET}")
-
-                if "content" in step and step["content"] and step["content"] != title:
-                    content = clean_markdown(step["content"])
-                    if content.startswith(title):
-                        content = content[len(title) :].strip()
-
-                    content = re.sub(r"^[\s]*-\s+", "   ", content)
-                    content = re.sub(r"\n[\s]*-\s+", "\n   ", content)
-
-                    if content:
-                        print(f"   {content}")
-
-                if step.get("commands"):
-                    print(f"   {YELLOW}Comandos:{RESET}")
-                    for cmd in step.get("commands"):
-                        print(f"   $ {cmd}")
-
-                if step.get("subitems"):
-                    if step.get("subitems") and not step.get("commands"):
-                        print(f"   {CYAN}Detalhes:{RESET}")
-                    for subitem in step.get("subitems"):
-                        subitem = clean_markdown(subitem)
-                        print(f"   • {subitem}")
-
-                print()
-
-        print("=" * 80)
-
-    except Exception as e:
-        logger.error(f"Erro ao exibir playbook: {str(e)}")
 
 
 if __name__ == "__main__":
