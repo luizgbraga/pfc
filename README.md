@@ -1,6 +1,6 @@
 # Cyber Security Playbook Generator
 
-A tool for generating cyber security playbooks using Neo4j and Ollama.
+A tool for generating cybersecurity playbooks using Neo4j and Ollama. It provides an API that receives alerts, which are enqueued via RabbitMQ and asynchronously consumed by a chain of LLMs implementing the Chain of Explorations (CoE) algorithm on the Unified Cyber Ontology (UCO) knowledge graph. The system iteratively explores the graph and leverages GraphRAG as an external, trustworthy source of cybersecurity knowledge to generate the response playbook.
 
 ## Requirements
 - Git and Docker
