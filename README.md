@@ -2,6 +2,10 @@
 
 A tool for generating cybersecurity playbooks using Neo4j and Ollama. It provides an API that receives alerts, which are enqueued via RabbitMQ and asynchronously consumed by a chain of LLMs implementing the Chain of Explorations (CoE) algorithm on the Unified Cyber Ontology (UCO) knowledge graph. The system iteratively explores the graph and leverages GraphRAG as an external, trustworthy source of cybersecurity knowledge to generate the response playbook.
 
+## Architecture
+
+<img width="2422" height="1165" alt="pfc-arq" src="https://github.com/user-attachments/assets/336b8238-f55f-4423-8674-beec04dfd49b" />
+
 ## Requirements
 - Git and Docker
 - ~3.5GB RAM free to run deepseek-r1:1.5b-qwen-distill-q8_0 (default)
