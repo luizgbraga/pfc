@@ -45,7 +45,12 @@ def callback(ch, method, properties, body):
 def main():
     credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=credentials)
+        pika.ConnectionParameters(
+            host=RABBITMQ_HOST,
+            credentials=credentials,
+            heartbeat=600,
+            blocked_connection_timeout=900,
+        )
     )
     channel = connection.channel()
     channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)

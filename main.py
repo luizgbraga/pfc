@@ -330,12 +330,12 @@ def generate_playbook(
             incident_data=str(incident_data),
         )
 
-        initial_subgraph = graph_retriever.build_initial_subgraph(planner.initial_nodes)
+        subgraph = graph_retriever.build_initial_subgraph(planner.initial_nodes)
 
         explorer = invoke_explorer(
             llm=llm,
             incident_data=str(incident_data),
-            subgraph=initial_subgraph,
+            subgraph=subgraph,
         )
 
         nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
@@ -346,7 +346,7 @@ def generate_playbook(
                 break
             print(f"{i}) Expanding... ", nodes_to_expand)
             subgraph = graph_retriever.expand_subgraph_from_leaves(
-                subgraph=initial_subgraph,
+                subgraph=subgraph,
                 leaf_node_uris=nodes_to_expand,
             )
 
@@ -356,7 +356,11 @@ def generate_playbook(
                 subgraph=subgraph,
             )
 
-            nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
+            next_nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
+            if set(next_nodes_to_expand) == set(nodes_to_expand):
+                print("No new nodes to expand, stopping.")
+                break
+            nodes_to_expand = next_nodes_to_expand
             i += 1
 
         playbook = invoke_playbook(
