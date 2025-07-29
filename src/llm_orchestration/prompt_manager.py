@@ -27,7 +27,7 @@ class PlannerResponse:
     exploration_plan: List[PlannerExplorationPlan]
 
 
-def build_planner_prompt(incident_data: str) -> str:
+def build_planner_prompt(incident_data: str, all_labels: List[str]) -> str:
     """
     Constructs the planner prompt using the few-shot technique with provided examples.
 
@@ -45,8 +45,14 @@ def build_planner_prompt(incident_data: str) -> str:
         for example in planner_examples_data
     ]
 
+    plain_prompt = PLANNER_PROMPT.read_text(encoding="utf-8")
+    plain_prompt += "\n\n#NÓS DISPONÍVEIS DA UCO:\n"
+    plain_prompt += "MEMORIZE esse nós pois você precisará escolher os mais relevantes para iniciar sua investigação.\n"
+    plain_prompt += "SÓ PODE ESCOLHER NÓS QUE ESTEJAM NA LISTA ABAIXO:\n"
+    plain_prompt += "\n".join(f"- {label}" for label in all_labels)
+
     planner_prompt = few_shot_prompt(
-        PLANNER_PROMPT.read_text(encoding="utf-8"),
+        plain_prompt,
         examples=planner_examples,
     )
     planner_prompt += "\n\n- Dados do incidente:\n" + incident_data
@@ -65,7 +71,7 @@ class ExplorerResponse:
     nodes_to_expand: List[ExplorerExpandNode]
 
 
-def build_explorer_prompt(incident_data: str, subgraph: Subgraph) -> str:
+def build_explorer_prompt(incident_summary: str, subgraph: Subgraph) -> str:
     """
     Constructs the explorer prompt using the few-shot technique with provided examples.
 
@@ -93,16 +99,15 @@ def build_explorer_prompt(incident_data: str, subgraph: Subgraph) -> str:
         {
             "nodes": subgraph.nodes,
             "relationships": subgraph.relationships,
-            "leaf_nodes": subgraph.leaf_nodes,
         },
         ensure_ascii=False,
         indent=2,
     )
     explorer_prompt += (
-        "Os nós escolhidos para a expansão DEVEM SER os LEAF_NODES do subgrafo atual.\n"
+        "Os nós escolhidos para a expansão DEVEM SER estar entre os NÓS DO SUBGRAFO\n"
     )
-    explorer_prompt += f"Logo, escolha somente entre os nós da lista: {', '.join(subgraph.leaf_nodes)}\n"
-    explorer_prompt += "\n\n- Dados do incidente:\n" + incident_data
+    explorer_prompt += f"Logo, escolha somente entre os nós da lista: {', '.join(subgraph.nodes.keys())}\n"
+    explorer_prompt += "\n\n- Dados do incidente:" + incident_summary
 
     return explorer_prompt
 
@@ -204,7 +209,6 @@ def build_playbook_prompt(incident_data: str, subgraph: Subgraph) -> str:
         {
             "nodes": subgraph.nodes,
             "relationships": subgraph.relationships,
-            "leaf_nodes": subgraph.leaf_nodes,
         },
         ensure_ascii=False,
         indent=2,

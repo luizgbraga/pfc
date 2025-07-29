@@ -14,11 +14,11 @@
     "answer": {
       "query": "Multiple failed login attempts followed by successful login and suspicious privileged commands execution by user 'admin0' from IP 192.168.1.100 on host srv-db-prod00.",
       "initial_nodes": [
-        "WindowsAccount",
-        "UserAccount",
-        "Credential",
-        "IPAddress",
-        "WindowsProcess"
+        "T1078",
+        "Process",
+        "CredentialAccessTechnique",
+        "NetworkTrafficFiltering",
+        "FileSystem"
       ],
       "exploration_plan": [
         {
@@ -71,10 +71,11 @@
     "answer": {
       "query": "A file resembling a backdoor was copied to a critical system directory and given SUID permissions. Detected on host host-malware-0 by user 'user0' with source IP 10.0.0.20.",
       "initial_nodes": [
-        "UNIXFile",
         "FileSystem",
-        "UserAccount",
-        "WindowsProcess"
+        "Process",
+        "T1561.001",
+        "T1078",
+        "ScheduledJob"
       ],
       "exploration_plan": [
         {
@@ -115,10 +116,11 @@
     "answer": {
       "query": "Encoded PowerShell command detected, which is a common obfuscation technique used in malware. Detected on host host-malware-1 by user 'user1' with source IP 10.0.0.21.",
       "initial_nodes": [
-        "WindowsProcess",
-        "Code",
-        "UserAccount",
-        "Command"
+        "Process",
+        "CredentialAccessTechnique",
+        "NetworkTraffic",
+        "FileSystem",
+        "T1033"
       ],
       "exploration_plan": [
         {
@@ -159,9 +161,11 @@
     "answer": {
       "query": "Unusual volume of DNS queries from a single host, potentially indicating data exfiltration or C2 activity. Detected on host host-malware-2 by user 'user2' with source IP 10.0.0.22.",
       "initial_nodes": [
-        "DNSCache",
-        "IPAddress",
-        "NetworkFlow"
+        "DNSTrafficAnalysis",
+        "NetworkTraffic",
+        "Process",
+        "T1033",
+        "DomainNameFacet"
       ],
       "exploration_plan": [
         {
@@ -202,10 +206,11 @@
     "answer": {
       "query": "Executable was run from a mounted USB device, which is often used to introduce malware. Detected on host host-malware-3 by user 'user3' with source IP 10.0.0.23.",
       "initial_nodes": [
-        "Device",
-        "File",
-        "Volume",
-        "UserAccount"
+        "BlockDevice",
+        "Process",
+        "FileSystem",
+        "NetworkTraffic",
+        "ScheduledJob"
       ],
       "exploration_plan": [
         {
@@ -246,10 +251,11 @@
     "answer": {
       "query": "Windows registry modified to execute malicious binary at startup. Detected on host host-malware-4 by user 'user4' with source IP 10.0.0.24.",
       "initial_nodes": [
-        "WindowsRegistry",
-        "WindowsAccount",
-        "File",
-        "WindowsTask"
+        "WindowsRegistryKey",
+        "Process",
+        "FileSystem",
+        "ScheduledJob",
+        "NetworkTraffic"
       ],
       "exploration_plan": [
         {
@@ -290,9 +296,11 @@
     "answer": {
       "query": "Execution of known credential dumping tool detected on a domain controller. Detected on host host-malware-5 by user 'user5' with source IP 10.0.0.25.",
       "initial_nodes": [
-        "CredentialDump",
-        "WindowsProcess",
-        "WindowsAccount"
+        "Process",
+        "CredentialAccessTechnique",
+        "T1078",
+        "NetworkTraffic",
+        "FileSystem"
       ],
       "exploration_plan": [
         {
@@ -333,9 +341,11 @@
     "answer": {
       "query": "Host initiated network traffic to an IP address present on threat intelligence blacklists. Detected on host host-malware-6 by user 'user6' with source IP 10.0.0.26.",
       "initial_nodes": [
-        "IPAddress",
-        "NetworkConnection",
-        "DomainName"
+        "NetworkTraffic",
+        "Process",
+        "DomainNameFacet",
+        "FileSystem",
+        "ScheduledJob"
       ],
       "exploration_plan": [
         {
@@ -376,9 +386,11 @@
     "answer": {
       "query": "Opening of a malicious PDF triggered a vulnerability exploit in the PDF reader. Detected on host host-malware-7 by user 'user7' with source IP 10.0.0.27.",
       "initial_nodes": [
-        "PDFFile",
-        "ApplicationAccount",
-        "Process"
+        "Process",
+        "FileSystem",
+        "NetworkTraffic",
+        "T1212",
+        "T1546.005"
       ],
       "exploration_plan": [
         {
@@ -419,9 +431,11 @@
     "answer": {
       "query": "Malicious browser extension detected harvesting stored credentials. Detected on host host-malware-8 by user 'user8' with source IP 10.0.0.28.",
       "initial_nodes": [
-        "BrowserCookie",
-        "Credential",
-        "ApplicationAccount"
+        "CredentialAccessTechnique",
+        "Process",
+        "FileSystem",
+        "NetworkTraffic",
+        "T1518.001"
       ],
       "exploration_plan": [
         {

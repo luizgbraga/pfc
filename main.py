@@ -59,17 +59,16 @@ def explore_ontology(
     try:
         neo4j = Neo4jManager()
 
-        # Busca mais abrangente (labels, comentários e URIs)
+        # Busca mais abrangente: procura em todos os nós, não só classes
         query = """
-        MATCH (c:Resource:owl__Class)
+        MATCH (n)
         WHERE 
-          ANY(label IN c.rdfs__label WHERE toLower(label) CONTAINS toLower($term))
-          OR c.uri CONTAINS toLower($term)
-          OR ANY(comment IN c.rdfs__comment WHERE 
-                comment IS NOT NULL AND toLower(comment) CONTAINS toLower($term))
-        RETURN c.uri AS uri, c.rdfs__label[0] AS label, 
-              CASE WHEN c.rdfs__comment IS NULL THEN '' 
-                   ELSE c.rdfs__comment[0] END AS description
+          (n.rdfs__label IS NOT NULL AND ANY(label IN n.rdfs__label WHERE toLower(label) CONTAINS toLower($term)))
+          OR (n.uri IS NOT NULL AND toLower(n.uri) CONTAINS toLower($term))
+          OR (n.rdfs__comment IS NOT NULL AND ANY(comment IN n.rdfs__comment WHERE comment IS NOT NULL AND toLower(comment) CONTAINS toLower($term)))
+        RETURN n.uri AS uri, 
+               CASE WHEN n.rdfs__label IS NULL THEN '' ELSE n.rdfs__label[0] END AS label, 
+               CASE WHEN n.rdfs__comment IS NULL THEN '' ELSE n.rdfs__comment[0] END AS description
         """
 
         results = neo4j.execute_query(query, {"term": search_term})
@@ -310,6 +309,109 @@ def list_all_nodes():
 
 
 @app.command()
+def list_top_k_nodes(
+    k: int = typer.Option(5, help="Número mínimo de relacionamentos para exibir o nó"),
+):
+    """Lista todos os nós com pelo menos k relacionamentos."""
+    try:
+        neo4j = Neo4jManager()
+        retriever = GraphRetriever(neo4j)
+        nodes = retriever.get_top_k_nodes(min_rel_count=k)
+
+        if not nodes:
+            print(f"\nNenhum nó encontrado com pelo menos {k} relacionamentos.")
+        else:
+            print(f"\nNós com pelo menos {k} relacionamentos:\n")
+            for i, node in enumerate(nodes, 1):
+                print(
+                    f"{i}. {node['label']} (URI: {node['uri']}) - {node['rel_count']} relacionamentos"
+                )
+                if node["description"]:
+                    desc = node["description"]
+                    print(f"   {desc[:100]}..." if len(desc) > 100 else f"   {desc}")
+                print()
+
+        neo4j.close()
+    except Exception as e:
+        logger.error(f"Erro ao listar nós com pelo menos {k} relacionamentos: {str(e)}")
+
+
+@app.command()
+def explore_node(
+    node_uri: str = typer.Option(None, help="URI do nó a ser explorado"),
+    node_label: str = typer.Option(
+        None, help="Label do nó a ser explorado (opcional, busca exata)"
+    ),
+):
+    """Exibe todos os nós conectados ao nó especificado pelo URI ou label."""
+    try:
+        neo4j = Neo4jManager()
+
+        # If label is provided, find the node URI by label (exact match)
+        if node_label:
+            label_query = """
+            MATCH (n)
+            WHERE n.rdfs__label[0] = $label
+            RETURN n.uri AS uri, n.rdfs__label[0] AS label
+            LIMIT 1
+            """
+            label_result = neo4j.execute_query(label_query, {"label": node_label})
+            if not label_result:
+                print(f"\nNenhum nó encontrado com o label '{node_label}'.")
+                neo4j.close()
+                return
+            node_uri = label_result[0]["uri"]
+
+        if not node_uri:
+            print("\nVocê deve fornecer um URI ou um label de nó.")
+            neo4j.close()
+            return
+
+        # Only fetch connected nodes that are likely to be concepts (have a label or are owl:Class/Resource)
+        query = """
+        MATCH (n {uri: $uri})-[r]-(connected)
+        WHERE (
+            connected.rdfs__label IS NOT NULL AND connected.rdfs__label[0] <> ''
+            OR connected:owl__Class
+            OR connected:Resource
+            OR (connected.rdfs__comment IS NOT NULL AND connected.rdfs__comment[0] <> '')
+        )
+        AND NOT connected.uri STARTS WITH 'bnode://'
+        RETURN type(r) AS rel_type,
+               connected.uri AS connected_uri,
+               connected.rdfs__label[0] AS label,
+               labels(connected) AS node_labels,
+               CASE WHEN connected.rdfs__comment IS NULL THEN '' ELSE connected.rdfs__comment[0] END AS description
+        ORDER BY rel_type, label
+        """
+
+        results = neo4j.execute_query(query, {"uri": node_uri})
+
+        if not results:
+            print(f"\nNenhum conceito relacionado encontrado para o nó '{node_uri}'.")
+        else:
+            print(f"\nConceitos relacionados ao nó '{node_uri}':\n")
+            for i, result in enumerate(results, 1):
+                label = (
+                    result["label"]
+                    if result["label"]
+                    else ", ".join(result["node_labels"]) or "(sem label)"
+                )
+                print(
+                    f"{i}. [{result['rel_type']}] {label} (URI: {result['connected_uri']})"
+                )
+                if result["description"]:
+                    desc = result["description"]
+                    print(f"   {desc[:100]}..." if len(desc) > 100 else f"   {desc}")
+                print()
+
+        neo4j.close()
+
+    except Exception as e:
+        logger.error(f"Erro ao explorar conexões do nó: {str(e)}")
+
+
+@app.command()
 def generate_playbook(
     alert: str = typer.Option(None, help="Dados crus do alerta"),
     output_file: str = typer.Option(None, help="Arquivo para salvar o playbook gerado"),
@@ -325,16 +427,26 @@ def generate_playbook(
         # llm = OllamaLLM()
         llm = OpenAILLM()
 
+        all_nodes = graph_retriever.get_top_k_nodes()
+        all_labels = [
+            node["label"] for node in all_nodes if "label" in node and node["label"]
+        ]
+
         planner = invoke_planner(
             llm=llm,
             incident_data=str(incident_data),
+            all_labels=all_labels,
         )
+
+        print("Nós iniciais escolhidos pelo planejador: ", planner.initial_nodes)
 
         subgraph = graph_retriever.build_initial_subgraph(planner.initial_nodes)
 
+        print("Subgrafo inicial construído com nós:", subgraph.nodes.keys())
+
         explorer = invoke_explorer(
             llm=llm,
-            incident_data=str(incident_data),
+            incident_summary=str(planner.query),
             subgraph=subgraph,
         )
 
@@ -344,7 +456,7 @@ def generate_playbook(
         while len(nodes_to_expand) > 0:
             if i > 10:
                 break
-            print(f"{i}) Expanding... ", nodes_to_expand)
+            print(f"{i}) Expanding... ")
             subgraph = graph_retriever.expand_subgraph_from_leaves(
                 subgraph=subgraph,
                 leaf_node_uris=nodes_to_expand,
@@ -352,9 +464,13 @@ def generate_playbook(
 
             explorer = invoke_explorer(
                 llm=llm,
-                incident_data=str(incident_data),
+                incident_summary=str(planner.query),
                 subgraph=subgraph,
             )
+
+            for node in explorer.nodes_to_expand:
+                print("Expanding node:", node.node_uri)
+                print("Reason:", node.reason)
 
             next_nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
             if set(next_nodes_to_expand) == set(nodes_to_expand):
@@ -376,7 +492,8 @@ def generate_playbook(
             output_file = f"playbook_{timestamp}.json"
 
         with open(output_file, "w") as f:
-            json.dump(playbook.to_dict(), f, indent=2)
+            content = {**playbook.to_dict(), "subgraph": subgraph.to_dict()}
+            json.dump(content, f, indent=2)
         logger.info(f"Playbook salvo em: {output_file}")
 
         neo4j.close()

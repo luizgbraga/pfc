@@ -5,14 +5,13 @@ from loguru import logger
 
 from src.knowledge_graph.neo4j_manager import Neo4jManager
 
-MAX_DEPTH = 1
+MAX_DEPTH = 0
 
 
 @dataclass
 class Subgraph:
     nodes: Dict[str, Dict[str, Any]]
     relationships: List[Dict[str, Any]]
-    leaf_nodes: List[str]
 
     def to_dict(self) -> Dict[str, Any]:
         """Converte o subgrafo para um dicionário.
@@ -23,7 +22,6 @@ class Subgraph:
         return {
             "nodes": self.nodes,
             "relationships": self.relationships,
-            "leaf_nodes": self.leaf_nodes,
         }
 
 
@@ -37,6 +35,49 @@ class GraphRetriever:
             neo4j_manager: Instância de Neo4jManager para operações no grafo
         """
         self.neo4j = neo4j_manager
+
+    def get_all_nodes(self) -> List[Dict[str, Any]]:
+        """Recupera todos os nós do grafo que possuem rdfs__label e não são blank nodes.
+
+        Returns:
+            Lista de dicionários representando os nós
+        """
+        query = """
+        MATCH (n)
+        WHERE n.rdfs__label IS NOT NULL 
+        AND size(n.rdfs__label) > 0 
+        AND NOT n.uri STARTS WITH 'bnode://'
+        RETURN n.uri AS uri, n.rdfs__label[0] AS label, 
+               CASE WHEN n.rdfs__comment IS NULL THEN '' 
+                    ELSE n.rdfs__comment[0] END AS description
+        ORDER BY label
+        """
+        return self.neo4j.execute_query(query)
+
+    def get_top_k_nodes(self, min_rel_count: int = 5) -> List[Dict[str, Any]]:
+        """Retorna os nós que possuem mais de min_rel_count relacionamentos (grau de saída).
+
+        Args:
+            min_rel_count: Número mínimo de relacionamentos para considerar o nó relevante
+
+        Returns:
+            Lista de dicionários representando os nós
+        """
+        query = """
+        MATCH (n)
+        WHERE n.rdfs__label IS NOT NULL 
+        AND size(n.rdfs__label) > 0 
+        AND NOT n.uri STARTS WITH 'bnode://'
+        OPTIONAL MATCH (n)-[r]->()
+        WITH n, count(r) AS rel_count
+        WHERE rel_count > $min_rel_count
+        RETURN n.uri AS uri, n.rdfs__label[0] AS label, 
+            CASE WHEN n.rdfs__comment IS NULL THEN '' 
+                    ELSE n.rdfs__comment[0] END AS description,
+            rel_count
+        ORDER BY rel_count DESC, label
+        """
+        return self.neo4j.execute_query(query, {"min_rel_count": min_rel_count})
 
     def build_initial_subgraph(self, node_labels: List[str]) -> Subgraph:
         """Constrói o subgrafo inicial do UCO contendo todos os nós da lista expandidos com DFS até MAX_DEPTH.
@@ -52,7 +93,7 @@ class GraphRetriever:
             initial_nodes = []
             for label in node_labels:
                 query = """
-                MATCH (n:Resource:owl__Class)
+                MATCH (n)
                 WHERE ANY(rdfs_label IN n.rdfs__label WHERE rdfs_label = $label)
                 AND NOT n.uri STARTS WITH 'bnode://'
                 AND n.rdfs__label IS NOT NULL
@@ -65,7 +106,7 @@ class GraphRetriever:
                 if not results:
                     # Se não encontrar correspondência exata, tentar busca por contém
                     query = """
-                    MATCH (n:Resource:owl__Class)
+                    MATCH (n)
                     WHERE ANY(rdfs_label IN n.rdfs__label WHERE rdfs_label CONTAINS $label)
                     AND NOT n.uri STARTS WITH 'bnode://'
                     AND n.rdfs__label IS NOT NULL
@@ -80,7 +121,7 @@ class GraphRetriever:
 
             if not initial_nodes:
                 logger.warning(f"Nenhum nó encontrado para os labels: {node_labels}")
-                return Subgraph(nodes={}, relationships=[], leaf_nodes=[])
+                return Subgraph(nodes={}, relationships=[])
 
             # URIs dos nós iniciais
             initial_uris = [node["uri"] for node in initial_nodes]
@@ -95,7 +136,7 @@ class GraphRetriever:
 
         except Exception as e:
             logger.error(f"Erro ao construir subgrafo inicial: {str(e)}")
-            return Subgraph(nodes={}, relationships=[], leaf_nodes=[])
+            return Subgraph(nodes={}, relationships=[])
 
     def expand_subgraph_from_leaves(
         self, subgraph: Subgraph, leaf_node_uris: List[str]
@@ -151,7 +192,7 @@ class GraphRetriever:
 
                 # Buscar informações do nó inicial
                 node_query = """
-                MATCH (n:Resource)
+                MATCH (n)
                 WHERE n.uri = $uri 
                 AND NOT n.uri STARTS WITH 'bnode://'
                 AND n.rdfs__label IS NOT NULL 
@@ -182,7 +223,7 @@ class GraphRetriever:
             for uri in current_level_uris:
                 # Buscar relacionamentos de saída (filtrar blank nodes dos targets)
                 rel_query = """
-                MATCH (start:Resource)-[r]->(target:Resource)
+                MATCH (start)-[r]->(target)
                 WHERE start.uri = $uri
                 AND NOT target.uri STARTS WITH 'bnode://'
                 AND target.rdfs__label IS NOT NULL
@@ -224,14 +265,7 @@ class GraphRetriever:
             if next_level_uris:
                 nodes_by_depth[depth + 1] = next_level_uris
 
-        # Identificar nós folha (nós que não têm relacionamentos de saída no subgrafo)
-        leaf_nodes = []
-        for uri in nodes.keys():
-            has_outgoing = any(rel["source"] == uri for rel in relationships)
-            if not has_outgoing:
-                leaf_nodes.append(uri)
-
-        return Subgraph(nodes=nodes, relationships=relationships, leaf_nodes=leaf_nodes)
+        return Subgraph(nodes=nodes, relationships=relationships)
 
     def _merge_subgraphs(self, subgraph1: Subgraph, subgraph2: Subgraph) -> Subgraph:
         """Mescla dois subgrafos em um único subgrafo.
@@ -259,17 +293,9 @@ class GraphRetriever:
                 merged_relationships.append(rel)
                 existing_rels.add(rel_key)
 
-        # Recalcular nós folha no subgrafo mesclado
-        leaf_nodes = []
-        for uri in merged_nodes.keys():
-            has_outgoing = any(rel["source"] == uri for rel in merged_relationships)
-            if not has_outgoing:
-                leaf_nodes.append(uri)
-
         return Subgraph(
             nodes=merged_nodes,
             relationships=merged_relationships,
-            leaf_nodes=leaf_nodes,
         )
 
     def retrieve_for_incident(self, incident_data: Dict[str, Any]) -> Dict[str, Any]:

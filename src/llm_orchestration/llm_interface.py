@@ -37,7 +37,9 @@ class PlannerResponse:
         }
 
 
-def invoke_planner(llm: LLM, incident_data: str) -> PlannerResponse:
+def invoke_planner(
+    llm: LLM, incident_data: str, all_labels: List[str]
+) -> PlannerResponse:
     """
     Invokes the planner LLM to generate an exploration plan based on incident data.
 
@@ -48,7 +50,7 @@ def invoke_planner(llm: LLM, incident_data: str) -> PlannerResponse:
         PlannerResponse: The response from the planner LLM containing the query, initial nodes, and exploration plan.
     """
     planner_response = llm.invoke(
-        prompt=build_planner_prompt(incident_data=incident_data),
+        prompt=build_planner_prompt(incident_data=incident_data, all_labels=all_labels),
     )
 
     planner_response_dict = clean_json(planner_response)
@@ -88,21 +90,23 @@ class ExplorerResponse:
 
 
 def invoke_explorer(
-    llm: LLM, incident_data: str, subgraph: Subgraph
+    llm: LLM, incident_summary: str, subgraph: Subgraph
 ) -> ExplorerResponse:
     """
     Invokes the explorer LLM to determine which nodes to expand based on incident data and subgraph.
 
     Args:
         llm (LLM): The LLM instance to use for determining node expansions.
-        incident_data (str): The incident data to provide context for the exploration.
+        incident_summary (str): The incident summary to provide context for the exploration.
         subgraph (Subgraph): The subgraph containing the current state of the graph.
 
     Returns:
         ExplorerResponse: The response from the explorer LLM containing nodes to expand and reasons.
     """
     explorer_response = llm.invoke(
-        prompt=build_explorer_prompt(incident_data=incident_data, subgraph=subgraph),
+        prompt=build_explorer_prompt(
+            incident_summary=incident_summary, subgraph=subgraph
+        ),
     )
 
     explorer_response_dict = clean_json(explorer_response)

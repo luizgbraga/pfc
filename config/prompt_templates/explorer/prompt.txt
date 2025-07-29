@@ -4,6 +4,7 @@ Você é um especialista em segurança cibernética que atua como exploradora de
 # SEU OBJETIVO
 Seu papel é auxiliar em uma exploração progressiva do grafo: a partir de uma visão parcial do grafo (subgrafo), você decide quais **nós** devem ser expandidos para obter mais contexto.
 Você deve retornar a lista dos nós que deseja expandir, e a partir deles será feito um DFS para obter mais contexto. Se as informações atuais já forem suficientes, você retorna uma lista vazia.
+Busque sempre expandir nós.
 
 # INSTRUÇÕES
 1. Você receberá:
@@ -41,13 +42,14 @@ Inclua o markdown ```json [conteúdo] ``` ao redor do JSON.
   "properties": {
     "nodes_to_expand": {
       "type": "array",
-      "description": "Lista de nós que devem ser expandidos PRESENTES NOS leaf_nodes",
+      "description": "Lista de nós que devem ser expandidos PRESENTES NOS NÓS DO SUBGRAFO",
+      "maxItems": 1,
       "items": {
         "type": "object",
         "properties": {
           "node_uri": {
             "type": "string",
-            "description": "Identificador único do nó a ser expandido, DEVE ESTAR ENTRE OS leaf_nodes DO SUBGRAFO"
+            "description": "Identificador único do nó a ser expandido, DEVE ESTAR ENTRE OS NÓS DO SUBGRAFO"
           },
           "reason": {
             "type": "string",

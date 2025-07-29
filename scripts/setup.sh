@@ -46,9 +46,14 @@ if ! docker-compose exec ollama ollama pull $MODEL_NAME; then
     echo "Warning: Could not pull model. You might need to wait for Ollama service to be ready."
 fi
 
-echo "4. Importing UCO ontology..."
-if ! docker-compose exec app python scripts/import_uco_to_docker.py; then
-    echo "Warning: UCO import failed. You might need to run this manually later."
+# echo "4. Importing UCO ontology..."
+# if ! docker-compose exec app python scripts/import_uco_to_docker.py; then
+#     echo "Warning: UCO import failed. You might need to run this manually later."
+# fi
+
+echo "4. Importing D3FEND ontology..."
+if ! docker-compose exec app python scripts/import_d3fend_to_docker.py; then
+    echo "Warning: D3FEND import failed. You might need to run this manually later."
 fi
 
 echo "5. Verifying the setup..."

@@ -6,23 +6,6 @@ definir uma sequência de passos que levará a LLM exploradora a recuperar as in
 O grafo contém entidades relacionadas a sistemas, arquivos, usuários, conexões de rede, processos, credenciais, etc. 
 Seu plano deve indicar um nó inicial e uma sequência lógica de investigações que levem à causa raiz, impacto e escopo do incidente.
 
-# UCO
-Os nós da ontologia UCO estão listados abaixo, divididos em 15 categorias:
-
-1. Sistema Operacional: Process, UNIXProcess, WindowsProcess, OperatingSystem, Thread, WindowsThread, WindowsEvent, WindowsService, WindowsTask, WindowsCriticalSection, WindowsSystemRestore, WindowsHandle, WindowsHook, Event, EventLog, Mutex, Semaphore, Snapshot, UserSession, WindowsWaitableTime, ComputerSpecification, WindowsComputerSpecification;
-2. Sistemas de Arquivos: File, UNIXFile, NTFSFile, PDFFile, ArchiveFile, Directory, FileSystem, FileSystemObject, Junction, ReparsePoint, SymbolicLink, WindowsFilemapping, Volume, DiskPartition, Disk, Appliance, Snapshot;
-3. Rede e Comunicação NetworkConnection, TCPConnection, HTTPConnection, ICMPConnection, NetworkFlow, NetworkRoute, NetworkSubnet, NetworkProtocol, NetworkInterface, WirelessNetworkConnection, NetworkAppliance, Socket, SocketAddress, AutonomousSystem, ARPCache, ARPCacheEntry, DNSCache, DNSRecord
-4. Endereçamento Digital: IPAddress, IPv4Address, IPv6Address, IPNetmask, DomainName, MACAddress, WifiAddress, BluetoothAddress, URL, Hostname, DigitalAddress, SIPAddress, InstantMessagingAddress, EmailAddress, Address
-5. Contas e Identidade: Account, UserAccount, ApplicationAccount, EmailAccount, DigitalAccount, MobileAccount, UNIXAccount, WindowsAccount, WindowsActiveDirectoryAccount, PhoneAccount, Credential, CredentialDump, Contact, ContactList, Profile, PaymentCard, SIMCard
-6. Mensagens e Comunicação: Message, EmailMessage, SMSMessage, PhoneCall, MessageTread, ForumPost, ForumPrivateMessage, Post, Tweet, Note, CalendarEntry, Calendar
-7. Conteúdo Web WebPage, Wiki, WikiArticle, URL, URLHistory, URLVisit, BrowserBookmark, BrowserCookie, CookieHistory, ShopListing
-8. Segurança e Criptografia: X509Certificate, X509V3Certificate, DigitalSignatureInfo, SecurityAppliance, WhoIs
-9. Dados e Conteúdo ContentData, Audio, RasterPicture, Image, Code, Library, SQLiteBlob, BotConfiguration
-10. Dispositivos: Device, MobileDevice, Memory, SIMCard
-11. Geolocalização GeoLocationLog, GeoLocationEntry, GeoLocationTrack
-
-MEMORIZE esse nós pois você precisará escolher os mais relevantes para iniciar sua investigação.
-
 # FORMATO DA RESPOSTA (IMPORTANTE)
 Você deve formatar sua saída como um valor JSON que esteja em conformidade com uma instância de "JSON Schema" fornecida.
 Não inclua NENHUM outro texto na sua saída, apenas siga ESTRITAMENTE a instância de "JSON Schema" fornecida abaixo.
@@ -55,8 +38,9 @@ Inclua o markdown ```json [conteúdo] ``` ao redor do JSON.
         "description": "Nome dos nós iniciais DA ONTOLOGIA UCO, NÃO UTILIZE NÓS QUE NÃO ESTEJAM NA ONTOLOGIA"
       },
       "minItems": 1,
+      "maxItems": 5,
       "description": "Lista de nós sugeridos para iniciar a investigação, DEVEM SER NÓS DA ONTOLOGIA UCO",
-      "enum": ["Process", "UNIXProcess", "WindowsProcess", "OperatingSystem", "Thread", "WindowsThread", "WindowsEvent", "WindowsService", "WindowsTask", "WindowsCriticalSection", "WindowsSystemRestore", "WindowsHandle", "WindowsHook", "Event", "EventLog", "Mutex", "Semaphore", "Snapshot", "UserSession", "WindowsWaitableTime", "ComputerSpecification", "WindowsComputerSpecification", "Account", "UserAccount", "ApplicationAccount", "EmailAccount", "DigitalAccount", "MobileAccount", "UNIXAccount", "WindowsAccount", "WindowsActiveDirectoryAccount", "PhoneAccount", "Credential", "CredentialDump", "Contact", "ContactList", "Profile", "PaymentCard", "SIMCard"]
+      "enum": ["CCI Catalog v2022-04-05", "NIST SP 800-53 R5", "Process Spawn Analysis", "Process Lineage Analysis", "Process", "Kernel", "System Owner/User Discovery", "Inbound Traffic Filtering", "Network Traffic Filtering", "OT Controller", "OT Sensor", "Organization Mapping", "Block Device", "Disk Content Wipe", "Memory Management Unit", "Operating System", "Operational Dependency Mapping", "Operational Risk Assessment", "RPC Traffic Analysis", "Rootkit", "Scheduled Job", "Security Software Discovery", "System Call Analysis", "Windows CreateFileA", "Asset Vulnerability Enumeration", "Central Processing Unit", "Change Default Password", "Content Modification", "Credential Access Technique", "DNS Traffic Analysis", "File System", "IPC Traffic Analysis", "Job Scheduler Software", "Resource Access Pattern Analysis", "Valid Accounts", "Windows Registry Key", "Access Mediation", "Create Process", "Exploitation for Credential Access", "Exploitation of Remote Services", "Network Node Inventory", "Network Traffic", "Password Spraying", "Process Code Segment Verification", "Processor Cache Memory", "Remote System Discovery", "Run Virtual Instance", "Scheduled Task/Job", "Trap", "User"]
     },
     "exploration_plan": {
       "type": "array",
