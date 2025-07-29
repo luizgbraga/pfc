@@ -22,11 +22,11 @@ app = typer.Typer()
 
 @app.command()
 def test_neo4j_connection():
-    """Testa a conexão com o Neo4j e exibe informações sobre a ontologia UCO."""
+    """Testa a conexão com o Neo4j e exibe informações sobre a ontologia DEF3ND."""
     try:
         neo4j = Neo4jManager()
 
-        logger.info("Consultando observáveis da UCO...")
+        logger.info("Consultando observáveis da DEF3ND...")
         observables = neo4j.get_cyber_observables()
         logger.info(f"Encontrados {len(observables)} observáveis")
 
@@ -53,9 +53,9 @@ def test_neo4j_connection():
 
 @app.command()
 def explore_ontology(
-    search_term: str = typer.Option(..., help="Termo para buscar na ontologia UCO"),
+    search_term: str = typer.Option(..., help="Termo para buscar na ontologia DEF3ND"),
 ):
-    """Explora a ontologia UCO buscando por um termo específico."""
+    """Explora a ontologia DEF3ND buscando por um termo específico."""
     try:
         neo4j = Neo4jManager()
 
@@ -102,10 +102,10 @@ def explore_ontology(
         if not results:
             print(f"\nNenhum resultado encontrado diretamente para '{search_term}'")
             print(
-                "\nDica: Experimente o comando analyze_ontology para explorar a estrutura da ontologia UCO."
+                "\nDica: Experimente o comando analyze_ontology para explorar a estrutura da ontologia DEF3ND."
             )
         else:
-            print(f"\nResultados para '{search_term}' na ontologia UCO:\n")
+            print(f"\nResultados para '{search_term}' na ontologia DEF3ND:\n")
 
             for i, result in enumerate(results, 1):
                 print(f"{i}. {result['label']}")
@@ -124,7 +124,7 @@ def explore_ontology(
 def list_key_concepts(
     limit: int = typer.Option(20, help="Número máximo de conceitos a exibir"),
 ):
-    """Lista os principais conceitos na ontologia UCO."""
+    """Lista os principais conceitos na ontologia DEF3ND."""
     try:
         neo4j = Neo4jManager()
 
@@ -143,7 +143,9 @@ def list_key_concepts(
 
         results = neo4j.execute_query(query, {"limit": limit})
 
-        print("\nPrincipais conceitos na ontologia UCO (com mais relacionamentos):\n")
+        print(
+            "\nPrincipais conceitos na ontologia DEF3ND (com mais relacionamentos):\n"
+        )
 
         for i, result in enumerate(results, 1):
             print(
@@ -176,7 +178,7 @@ def list_relationship_types():
 
         results = neo4j.execute_query(query)
 
-        print("\nTipos de relacionamentos na ontologia UCO:\n")
+        print("\nTipos de relacionamentos na ontologia DEF3ND:\n")
 
         for result in results:
             print(f"- {result['relType']}: {result['count']} ocorrências")
@@ -189,7 +191,7 @@ def list_relationship_types():
 
 @app.command()
 def analyze_ontology():
-    """Fornece uma análise da estrutura da ontologia UCO no Neo4j."""
+    """Fornece uma análise da estrutura da ontologia DEF3ND no Neo4j."""
     try:
         neo4j = Neo4jManager()
 
@@ -203,7 +205,7 @@ def analyze_ontology():
 
         namespace_results = neo4j.execute_query(namespace_query)
 
-        print("\n=== MÓDULOS DA ONTOLOGIA UCO ===\n")
+        print("\n=== MÓDULOS DA ONTOLOGIA DEF3ND ===\n")
         for result in namespace_results:
             print(f"{result['namespace']}: {result['count']} classes")
 
@@ -248,7 +250,7 @@ def analyze_ontology():
 
 @app.command()
 def list_observables():
-    """Lista observáveis disponíveis na ontologia UCO."""
+    """Lista observáveis disponíveis na ontologia DEF3ND."""
     try:
         neo4j = Neo4jManager()
 
@@ -262,7 +264,7 @@ def list_observables():
 
         results = neo4j.execute_query(query)
 
-        print("\nObserváveis na ontologia UCO (importantes para segurança):\n")
+        print("\nObserváveis na ontologia DEF3ND (importantes para segurança):\n")
 
         for i, result in enumerate(results, 1):
             print(f"{i}. {result['label']}")
@@ -279,7 +281,7 @@ def list_observables():
 
 @app.command()
 def list_all_nodes():
-    """Lista todos os nós do grafo UCO."""
+    """Lista todos os nós do grafo DEF3ND."""
     try:
         neo4j = Neo4jManager()
 
@@ -293,7 +295,7 @@ def list_all_nodes():
 
         results = neo4j.execute_query(query)
 
-        print("\nTodos os nós no grafo UCO:\n")
+        print("\nTodos os nós no grafo DEF3ND:\n")
 
         for i, result in enumerate(results, 1):
             print(f"{i}. {result['label']}")

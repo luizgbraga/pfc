@@ -46,7 +46,7 @@ def build_planner_prompt(incident_data: str, all_labels: List[str]) -> str:
     ]
 
     plain_prompt = PLANNER_PROMPT.read_text(encoding="utf-8")
-    plain_prompt += "\n\n#NÓS DISPONÍVEIS DA UCO:\n"
+    plain_prompt += "\n\n#NÓS DISPONÍVEIS DA DEF3ND:\n"
     plain_prompt += "MEMORIZE esse nós pois você precisará escolher os mais relevantes para iniciar sua investigação.\n"
     plain_prompt += "SÓ PODE ESCOLHER NÓS QUE ESTEJAM NA LISTA ABAIXO:\n"
     plain_prompt += "\n".join(f"- {label}" for label in all_labels)

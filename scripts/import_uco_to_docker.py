@@ -97,7 +97,7 @@ def verify_import(session):
 
     result = session.run("MATCH (c:Resource:owl__Class) RETURN count(c) AS count")
     uco_classes = result.single()["count"]
-    logger.info(f"UCO classes: {uco_classes}")
+    logger.info(f"DEF3ND classes: {uco_classes}")
 
     result = session.run("CALL db.labels() YIELD label RETURN label LIMIT 10")
     labels = [record["label"] for record in result]
@@ -108,7 +108,7 @@ def verify_import(session):
 
 def main():
     """Main import process"""
-    logger.info("Starting UCO ontology import to Docker Neo4j...")
+    logger.info("Starting DEF3ND ontology import to Docker Neo4j...")
 
     driver = wait_for_neo4j()
 
@@ -127,9 +127,9 @@ def main():
             )
 
             if verify_import(session):
-                logger.info("UCO ontology import verification successful!")
+                logger.info("DEF3ND ontology import verification successful!")
             else:
-                logger.error("UCO ontology import verification failed!")
+                logger.error("DEF3ND ontology import verification failed!")
 
     except Exception as e:
         logger.error(f"Import failed: {e}")

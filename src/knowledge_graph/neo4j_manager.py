@@ -11,7 +11,7 @@ logger.add(sys.stderr, level=LOG_LEVEL)
 
 
 class Neo4jManager:
-    """Gerencia conexões e consultas ao banco de dados Neo4j contendo a ontologia UCO."""
+    """Gerencia conexões e consultas ao banco de dados Neo4j contendo a ontologia DEF3ND."""
 
     def __init__(self, uri: str = None, user: str = None, password: str = None):
         """Inicializa o gerenciador de Neo4j.
@@ -40,7 +40,9 @@ class Neo4jManager:
                     "MATCH (c:Resource:owl__Class) RETURN count(c) AS count"
                 )
                 count = result.single()["count"]
-                logger.info(f"Banco de dados contém {count} classes da ontologia UCO")
+                logger.info(
+                    f"Banco de dados contém {count} classes da ontologia DEF3ND"
+                )
         except Exception as e:
             logger.error(f"Falha ao conectar ao Neo4j: {str(e)}")
             raise
@@ -73,7 +75,7 @@ class Neo4jManager:
             raise
 
     def get_cyber_observables(self) -> List[Dict[str, Any]]:
-        """Recupera tipos de observáveis de segurança cibernética da UCO.
+        """Recupera tipos de observáveis de segurança cibernética da DEF3ND.
 
         Returns:
             Lista de observáveis com URI, rótulo e descrição
@@ -89,7 +91,7 @@ class Neo4jManager:
         return self.execute_query(query)
 
     def find_attack_patterns(self) -> List[Dict[str, Any]]:
-        """Recupera padrões de ataque da UCO.
+        """Recupera padrões de ataque da DEF3ND.
 
         Returns:
             Lista de padrões de ataque com URI, rótulo e descrição

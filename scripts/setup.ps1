@@ -39,7 +39,7 @@ if ($Rebuild) {
     docker-compose build --no-cache
     docker-compose up -d --force-recreate
 } else {
-    Write-Host "=== Setting up UCO in Docker Neo4j ===" -ForegroundColor Green
+    Write-Host "=== Setting up DEF3ND in Docker Neo4j ===" -ForegroundColor Green
     Write-Host "1. Starting Docker containers..." -ForegroundColor Cyan
     docker-compose up -d
 }
@@ -66,11 +66,11 @@ try {
     Write-Host "Warning: Could not pull model. You might need to wait for Ollama service to be ready." -ForegroundColor Yellow
 }
 
-Write-Host "4. Importing UCO ontology..." -ForegroundColor Cyan
+Write-Host "4. Importing DEF3ND ontology..." -ForegroundColor Cyan
 try {
-    docker-compose exec app python scripts/import_uco_to_docker.py
+    docker-compose exec app python scripts/import_d3fend_to_docker.py
 } catch {
-    Write-Host "Warning: UCO import failed. You might need to run this manually later." -ForegroundColor Yellow
+    Write-Host "Warning: DEF3ND import failed. You might need to run this manually later." -ForegroundColor Yellow
 }
 
 Write-Host "5. Verifying the setup..." -ForegroundColor Cyan

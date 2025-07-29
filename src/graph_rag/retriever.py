@@ -26,7 +26,7 @@ class Subgraph:
 
 
 class GraphRetriever:
-    """Recupera informações relevantes do grafo de conhecimento UCO."""
+    """Recupera informações relevantes do grafo de conhecimento DEF3ND."""
 
     def __init__(self, neo4j_manager: Neo4jManager):
         """Inicializa o recuperador de grafo.
@@ -80,7 +80,7 @@ class GraphRetriever:
         return self.neo4j.execute_query(query, {"min_rel_count": min_rel_count})
 
     def build_initial_subgraph(self, node_labels: List[str]) -> Subgraph:
-        """Constrói o subgrafo inicial do UCO contendo todos os nós da lista expandidos com DFS até MAX_DEPTH.
+        """Constrói o subgrafo inicial do DEF3ND contendo todos os nós da lista expandidos com DFS até MAX_DEPTH.
 
         Args:
             node_labels: Lista de labels dos nós para incluir no subgrafo

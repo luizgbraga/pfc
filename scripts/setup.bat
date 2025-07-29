@@ -25,7 +25,7 @@ if "%1"=="--rebuild" (
     echo Usage: %0 [--rebuild]
     exit /b 1
 ) else (
-    echo === Setting up UCO in Docker Neo4j ===
+    echo === Setting up DEF3ND in Docker Neo4j ===
     echo 1. Starting Docker containers...
     docker-compose up -d
 )
@@ -45,10 +45,10 @@ if errorlevel 1 (
     echo Warning: Could not pull model. You might need to wait for Ollama service to be ready.
 )
 
-echo 4. Importing UCO ontology...
-docker-compose exec app python scripts/import_uco_to_docker.py
+echo 4. Importing DEF3ND ontology...
+docker-compose exec app python scripts/import_d3fend_to_docker.py
 if errorlevel 1 (
-    echo Warning: UCO import failed. You might need to run this manually later.
+    echo Warning: DEF3ND import failed. You might need to run this manually later.
 )
 
 echo 5. Verifying the setup...
