@@ -221,9 +221,9 @@ class GraphRetriever:
             next_level_uris = []
 
             for uri in current_level_uris:
-                # Buscar relacionamentos de saída (filtrar blank nodes dos targets)
+                # Buscar todos os relacionamentos (entrada e saída, filtrar blank nodes dos targets)
                 rel_query = """
-                MATCH (start)-[r]->(target)
+                MATCH (start)-[r]-(target)
                 WHERE start.uri = $uri
                 AND NOT target.uri STARTS WITH 'bnode://'
                 AND target.rdfs__label IS NOT NULL
@@ -231,22 +231,31 @@ class GraphRetriever:
                 RETURN target.uri AS target_uri, type(r) AS relationship_type,
                        target.rdfs__label AS target_labels,
                        CASE WHEN target.rdfs__comment IS NULL THEN []
-                            ELSE target.rdfs__comment END AS target_comments
-                LIMIT 20
+                            ELSE target.rdfs__comment END AS target_comments,
+                       CASE WHEN start.uri = $uri THEN 'out' ELSE 'in' END AS direction
+                LIMIT 40
                 """
                 rel_results = self.neo4j.execute_query(rel_query, {"uri": uri})
 
                 for rel in rel_results:
                     target_uri = rel["target_uri"]
-
-                    # Adicionar relacionamento
-                    relationships.append(
-                        {
-                            "source": uri,
-                            "target": target_uri,
-                            "type": rel["relationship_type"],
-                        }
-                    )
+                    # Adicionar relacionamento (direção: source sempre o nó atual, target o outro)
+                    if rel["direction"] == "out":
+                        relationships.append(
+                            {
+                                "source": uri,
+                                "target": target_uri,
+                                "type": rel["relationship_type"],
+                            }
+                        )
+                    else:
+                        relationships.append(
+                            {
+                                "source": target_uri,
+                                "target": uri,
+                                "type": rel["relationship_type"],
+                            }
+                        )
 
                     # Adicionar nó target se ainda não visitado
                     if target_uri not in visited:
