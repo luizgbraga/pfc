@@ -13,6 +13,7 @@ from src.llm_orchestration.llm_interface import (
     invoke_playbook,
 )
 from src.llm_orchestration.llms.openai_llm import OpenAILLM
+from src.utils.html import playbook_to_html
 
 logger.remove()
 logger.add(sys.stderr, level=LOG_LEVEL)
@@ -498,6 +499,10 @@ def generate_playbook(
             content = {**playbook.to_dict(), "subgraph": subgraph.to_dict()}
             json.dump(content, f, indent=2)
         logger.info(f"Playbook salvo em: {output_file}")
+
+        if export:
+            playbook_to_html(playbook)
+            logger.info("Playbook exportado para HTML em: server/static/playbook.html")
 
         neo4j.close()
 

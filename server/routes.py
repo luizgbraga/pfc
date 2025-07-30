@@ -17,6 +17,20 @@ def index():
     )
 
 
+@routes.route("/playbook")
+def playbook():
+    """Serve the generated playbook HTML if it exists, otherwise show a message."""
+    static_dir = os.path.join(os.path.dirname(__file__), "static")
+    playbook_path = os.path.join(static_dir, "playbook.html")
+    if os.path.exists(playbook_path):
+        return send_from_directory(static_dir, "playbook.html")
+    else:
+        return (
+            "<h2>No playbook generated yet.</h2><p>Generate a playbook to view it here.</p>",
+            200,
+        )
+
+
 @routes.route("/generate-playbook", methods=["POST"])
 def generate_playbook():
     data = request.get_json()
