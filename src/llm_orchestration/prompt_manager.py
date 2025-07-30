@@ -204,7 +204,7 @@ def build_playbook_prompt(incident_data: str, subgraph: Subgraph) -> str:
         examples=playbook_examples,
     )
 
-    playbook_prompt += "\n\n- Subgrafo atual:\n"
+    playbook_prompt += "\n\n## Subgrafo Atual (informações confiáveis):\n"
     playbook_prompt += json.dumps(
         {
             "nodes": subgraph.nodes,

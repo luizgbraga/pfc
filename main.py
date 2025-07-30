@@ -444,8 +444,6 @@ def generate_playbook(
 
         subgraph = graph_retriever.build_initial_subgraph(planner.initial_nodes)
 
-        print("Subgrafo inicial construído com nós:", subgraph.nodes.keys())
-
         explorer = invoke_explorer(
             llm=llm,
             incident_summary=str(planner.query),
@@ -453,8 +451,11 @@ def generate_playbook(
         )
 
         nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
+        for node in explorer.nodes_to_expand:
+            print("Expanding node:", node.node_uri)
+            print("Reason:", node.reason)
 
-        i = 1
+        i = 2
         while len(nodes_to_expand) > 0:
             if i > 10:
                 break

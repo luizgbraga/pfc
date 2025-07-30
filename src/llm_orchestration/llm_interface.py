@@ -241,6 +241,7 @@ class LessonsLearnedAndPrevention:
 
 @dataclass
 class IncidentResponsePlaybook:
+    context_from_subgraph: str
     incident_summary: IncidentSummary
     investigation_steps: InvestigationSteps
     containment_procedures: ContainmentProcedures
@@ -250,6 +251,7 @@ class IncidentResponsePlaybook:
 
     def to_dict(self):
         return {
+            "context_from_subgraph": self.context_from_subgraph,
             "incident_summary": self.incident_summary.to_dict(),
             "investigation_steps": self.investigation_steps.to_dict(),
             "containment_procedures": self.containment_procedures.to_dict(),
@@ -274,6 +276,7 @@ def invoke_playbook(
     playbook_response_dict = clean_json(playbook_response)
 
     return IncidentResponsePlaybook(
+        context_from_subgraph=playbook_response_dict["context_from_subgraph"],
         incident_summary=IncidentSummary(
             overview=playbook_response_dict["incident_summary"]["overview"],
             technical_classification=playbook_response_dict["incident_summary"][

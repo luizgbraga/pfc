@@ -99,6 +99,10 @@ Inclua o markdown ```json [conteúdo] ``` ao redor do JSON.
   "title": "IncidentResponsePlaybook",
   "type": "object",
   "properties": {
+    "context_from_subgraph": {
+      "type": "string",
+      "description": "Contexto útil do subgrafo enviado para a elaboração do playbook"
+    },
     "incident_summary": {
       "type": "object",
       "properties": {
