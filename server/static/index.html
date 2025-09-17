@@ -253,7 +253,8 @@
                     alert: alertData,
                     output_file: outputFile || null,
                     export: exportChecked,
-                    display: displayChecked
+                    display: displayChecked,
+                    graph_rag_enabled: true,
                 };
                 
                 const response = await fetch('/generate-playbook', {

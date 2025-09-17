@@ -181,7 +181,9 @@ class IncidentResponsePlaybook:
     lessons_learned_and_prevention: LessonsLearnedAndPrevention
 
 
-def build_playbook_prompt(incident_data: str, subgraph: Subgraph) -> str:
+def build_playbook_prompt(
+    incident_data: str, subgraph: Subgraph, graph_rag_enabled: bool
+) -> str:
     """
     Constructs the playbook prompt using the few-shot technique with provided examples.
 
@@ -204,15 +206,17 @@ def build_playbook_prompt(incident_data: str, subgraph: Subgraph) -> str:
         examples=playbook_examples,
     )
 
-    playbook_prompt += "\n\n## Subgrafo Atual (informações confiáveis):\n"
-    playbook_prompt += json.dumps(
-        {
-            "nodes": subgraph.nodes,
-            "relationships": subgraph.relationships,
-        },
-        ensure_ascii=False,
-        indent=2,
-    )
-    playbook_prompt += "\n\n- Dados do incidente:\n" + incident_data
+    print(f"[DEBUG] Graph RAG enabled: {graph_rag_enabled}")
+    if graph_rag_enabled:
+        playbook_prompt += "\n\n## Subgrafo Atual (informações confiáveis):\n"
+        playbook_prompt += json.dumps(
+            {
+                "nodes": subgraph.nodes,
+                "relationships": subgraph.relationships,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        playbook_prompt += "\n\n- Dados do incidente:\n" + incident_data
 
     return playbook_prompt

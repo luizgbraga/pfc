@@ -34,7 +34,7 @@ def wait_for_neo4j(max_retries=30):
             logger.info("Neo4j is ready!")
             return driver
         except Exception as e:
-            logger.info(f"Waiting for Neo4j... ({i+1}/{max_retries}): {e}")
+            logger.info(f"Waiting for Neo4j... ({i + 1}/{max_retries}): {e}")
             time.sleep(5)
     raise Exception("Neo4j not ready after maximum retries")
 

@@ -11,11 +11,17 @@ RABBITMQ_USER = os.environ.get("RABBITMQ_USER")
 RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS")
 
 
-def process_alert_message(alert_json, output_file=None, export=False, display=True):
+def process_alert_message(
+    alert_json, output_file=None, export=False, display=True, graph_rag_enabled=True
+):
     """Process alert by calling the main generate_playbook function directly."""
     try:
         result = generate_playbook(
-            alert=alert_json, output_file=output_file, export=export, display=display
+            alert=alert_json,
+            output_file=output_file,
+            export=export,
+            display=display,
+            graph_rag_enabled=graph_rag_enabled,
         )
         print(f"[x] Playbook generated successfully: {result}")
         return result
@@ -32,12 +38,13 @@ def callback(ch, method, properties, body):
         output_file = message.get("output_file")
         export = message.get("export", False)
         display = message.get("display", True)
+        graph_rag_enabled = message.get("graph_rag_enabled", True)
 
         if alert is None:
             print("[!] Message missing 'alert' field.")
             return
 
-        process_alert_message(alert, output_file, export, display)
+        process_alert_message(alert, output_file, export, display, graph_rag_enabled)
     except Exception as e:
         print(f"[!] Error processing message: {e}")
 

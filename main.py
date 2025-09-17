@@ -33,7 +33,7 @@ def test_neo4j_connection():
 
         for i, obs in enumerate(observables[:5]):
             logger.info(
-                f"Observable {i+1}: {obs['label']} - {obs['description'][:100]}..."
+                f"Observable {i + 1}: {obs['label']} - {obs['description'][:100]}..."
             )
 
         logger.info("Consultando padrões de ataque...")
@@ -42,7 +42,7 @@ def test_neo4j_connection():
 
         for i, attack in enumerate(attacks[:3]):
             logger.info(
-                f"Attack {i+1}: {attack['label']} - {attack['description'][:100]}..."
+                f"Attack {i + 1}: {attack['label']} - {attack['description'][:100]}..."
             )
 
         neo4j.close()
@@ -420,6 +420,9 @@ def generate_playbook(
     output_file: str = typer.Option(None, help="Arquivo para salvar o playbook gerado"),
     export: bool = typer.Option(False, help="Exportar para HTML após geração"),
     display: bool = typer.Option(False, help="Exibir no terminal após geração"),
+    graph_rag_enabled: bool = typer.Option(
+        True, help="Incluir informações do subgrafo no prompt do playbook"
+    ),
 ):
     """Gera um playbook a partir de um alerta de segurança."""
     try:
@@ -487,6 +490,7 @@ def generate_playbook(
             llm=llm,
             incident_data=str(incident_data),
             subgraph=subgraph,
+            graph_rag_enabled=graph_rag_enabled,
         )
 
         if not output_file:

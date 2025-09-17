@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Any, Dict, Optional
 
 import pika
 
@@ -9,7 +10,13 @@ RABBITMQ_USER = os.environ.get("RABBITMQ_USER")
 RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS")
 
 
-def generate_playbook_controller(alert, output_file, export, display):
+def generate_playbook_controller(
+    alert: Dict[str, Any],
+    output_file: Optional[str],
+    export: bool,
+    display: bool,
+    graph_rag_enabled: bool,
+) -> Dict[str, str]:
     """Send alert to queue for processing instead of calling main function directly."""
     try:
         print(
@@ -21,6 +28,7 @@ def generate_playbook_controller(alert, output_file, export, display):
             "output_file": output_file,
             "export": export,
             "display": display,
+            "graph_rag_enabled": graph_rag_enabled,
         }
 
         credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)

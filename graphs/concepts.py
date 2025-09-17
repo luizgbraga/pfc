@@ -17,7 +17,7 @@ plt.figure(figsize=(8, 8))
 wedges, texts, autotexts = plt.pie(
     values,
     labels=None,
-    autopct=lambda pct: f"{int(pct/100.*sum(values))}",
+    autopct=lambda pct: f"{int(pct / 100.0 * sum(values))}",
     startangle=90,
     colors=plt.cm.Paired.colors,
     wedgeprops={"edgecolor": "black"},

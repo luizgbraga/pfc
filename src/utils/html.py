@@ -99,7 +99,7 @@ def playbook_to_html(playbook: IncidentResponsePlaybook):
             <div class="subsection-title">Coleta de Evidências</div>
             <table>
                 <tr><th>Descrição</th><th>Comando</th></tr>
-                {''.join(f'<tr><td>{ec.description}</td><td><span class="code-block">{ec.command}</span></td></tr>' for ec in playbook.investigation_steps.evidence_collection)}
+                {"".join(f'<tr><td>{ec.description}</td><td><span class="code-block">{ec.command}</span></td></tr>' for ec in playbook.investigation_steps.evidence_collection)}
             </table>
 
             <div class="subsection-title">Análise Técnica</div>
@@ -108,12 +108,12 @@ def playbook_to_html(playbook: IncidentResponsePlaybook):
             <div class="subsection-title">Ferramentas e Comandos</div>
             <table>
                 <tr><th>Ferramenta</th><th>Uso</th><th>Exemplo</th></tr>
-                {''.join(f'<tr><td>{tool.tool}</td><td>{tool.usage}</td><td><span class="code-block">{tool.example}</span></td></tr>' for tool in playbook.investigation_steps.tools_and_commands)}
+                {"".join(f'<tr><td>{tool.tool}</td><td>{tool.usage}</td><td><span class="code-block">{tool.example}</span></td></tr>' for tool in playbook.investigation_steps.tools_and_commands)}
             </table>
 
             <div class="subsection-title">Indicadores de Comprometimento</div>
             <ul>
-                {''.join(f'<li>{ioc}</li>' for ioc in playbook.investigation_steps.indicators_of_compromise)}
+                {"".join(f"<li>{ioc}</li>" for ioc in playbook.investigation_steps.indicators_of_compromise)}
             </ul>
         </section>
 
