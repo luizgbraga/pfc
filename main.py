@@ -448,43 +448,46 @@ def generate_playbook(
 
         subgraph = graph_retriever.build_initial_subgraph(planner.initial_nodes)
 
-        explorer = invoke_explorer(
-            llm=llm,
-            incident_summary=str(planner.query),
-            subgraph=subgraph,
-        )
-
-        nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
-        for node in explorer.nodes_to_expand:
-            print("Expanding node:", node.node_uri)
-            print("Reason:", node.reason)
-
-        i = 2
-        while len(nodes_to_expand) > 0:
-            if i > 10:
-                break
-            print(f"{i}) Expanding... ")
-            subgraph = graph_retriever.expand_subgraph_from_leaves(
-                subgraph=subgraph,
-                leaf_node_uris=nodes_to_expand,
-            )
-
+        if graph_rag_enabled:
             explorer = invoke_explorer(
                 llm=llm,
                 incident_summary=str(planner.query),
                 subgraph=subgraph,
             )
 
+            nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
             for node in explorer.nodes_to_expand:
                 print("Expanding node:", node.node_uri)
                 print("Reason:", node.reason)
 
-            next_nodes_to_expand = [node.node_uri for node in explorer.nodes_to_expand]
-            if set(next_nodes_to_expand) == set(nodes_to_expand):
-                print("No new nodes to expand, stopping.")
-                break
-            nodes_to_expand = next_nodes_to_expand
-            i += 1
+            i = 2
+            while len(nodes_to_expand) > 0:
+                if i > 10:
+                    break
+                print(f"{i}) Expanding... ")
+                subgraph = graph_retriever.expand_subgraph_from_leaves(
+                    subgraph=subgraph,
+                    leaf_node_uris=nodes_to_expand,
+                )
+
+                explorer = invoke_explorer(
+                    llm=llm,
+                    incident_summary=str(planner.query),
+                    subgraph=subgraph,
+                )
+
+                for node in explorer.nodes_to_expand:
+                    print("Expanding node:", node.node_uri)
+                    print("Reason:", node.reason)
+
+                next_nodes_to_expand = [
+                    node.node_uri for node in explorer.nodes_to_expand
+                ]
+                if set(next_nodes_to_expand) == set(nodes_to_expand):
+                    print("No new nodes to expand, stopping.")
+                    break
+                nodes_to_expand = next_nodes_to_expand
+                i += 1
 
         playbook = invoke_playbook(
             llm=llm,

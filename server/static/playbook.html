@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playbook de Resposta a Incidentes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        section {
+            margin-bottom: 32px;
+        }
+        .section-title {
+            border-left: 5px solid #3498db;
+            padding-left: 12px;
+            margin-bottom: 12px;
+            font-size: 1.4em;
+        }
+        ul, ol {
+            margin-left: 24px;
+        }
+        .subsection-title {
+            color: #2980b9;
+            margin-top: 18px;
+            font-size: 1.1em;
+        }
+        .code-block {
+            background: #f8f8f8;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 6px 0 12px 0;
+            white-space: pre-wrap;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f0f4f8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Playbook de Resposta a Incidentes</h1>
+
+        <section>
+            <div class="section-title">Contexto do Subgrafo</div>
+            <div>O subgrafo DEFEND indica que o incidente envolve execução remota de código via exploração de vulnerabilidade em serviço SSH exposto, com movimentação lateral detectada por conexões SSH suspeitas, criação de usuário não autorizado ('sysadmin') e transferência de arquivos maliciosos ('/tmp/update.sh'). O ataque foi originado do IP 203.0.113.45. O subgrafo relaciona os nós: 'Initial Access' (Exploit Public-Facing Application), 'Execution' (Command and Scripting Interpreter), 'Persistence' (Create Account), 'Defense Evasion' (Indicator Removal on Host), e 'Lateral Movement' (Remote Services: SSH).</div>
+        </section>
+
+        <section>
+            <div class="section-title">Resumo do Incidente</div>
+            <ul>
+                <li><b>Visão Geral:</b> Foi detectada a exploração de uma vulnerabilidade no serviço SSH exposto, permitindo execução remota de comandos. O atacante criou um usuário não autorizado ('sysadmin'), transferiu e executou um script malicioso ('/tmp/update.sh'), e realizou movimentação lateral para outros hosts internos via SSH.</li>
+                <li><b>Classificação Técnica:</b> Exploit Public-Facing Application (Initial Access), Command and Scripting Interpreter (Execution), Create Account (Persistence), Indicator Removal on Host (Defense Evasion), Remote Services: SSH (Lateral Movement)</li>
+                <li><b>Avaliação de Severidade:</b> Alta. O atacante obteve acesso privilegiado, criou persistência, executou código arbitrário e iniciou movimentação lateral. Há risco de comprometimento de múltiplos sistemas e exfiltração de dados.</li>
+                <li><b>Impacto Potencial:</b> Comprometimento de credenciais, acesso não autorizado a sistemas internos, possível exfiltração de dados sensíveis, interrupção de operações e risco de propagação para outros ativos críticos.</li>
+            </ul>
+        </section>
+
+        <section>
+            <div class="section-title">Etapas de Investigação</div>
+            <div class="subsection-title">Etapas de Triagem</div>
+            <div>1. Identificar hosts afetados pelo acesso SSH suspeito. 2. Verificar criação de usuários recentes. 3. Localizar scripts e arquivos maliciosos em /tmp e diretórios de usuários. 4. Analisar logs de autenticação e comandos executados.</div>
+
+            <div class="subsection-title">Coleta de Evidências</div>
+            <table>
+                <tr><th>Descrição</th><th>Comando</th></tr>
+                <tr><td>Coletar logs de autenticação SSH</td><td><span class="code-block">cp /var/log/auth.log /mnt/forensics/auth.log</span></td></tr><tr><td>Exportar histórico de comandos do usuário comprometido</td><td><span class="code-block">cp /home/sysadmin/.bash_history /mnt/forensics/sysadmin_bash_history</span></td></tr><tr><td>Preservar o script malicioso para análise</td><td><span class="code-block">cp /tmp/update.sh /mnt/forensics/update.sh</span></td></tr><tr><td>Coletar lista de usuários criados recentemente</td><td><span class="code-block">awk -F: '$3 >= 1000 {print $1,$3,$6}' /etc/passwd > /mnt/forensics/new_users.txt</span></td></tr><tr><td>Dump da memória para análise forense</td><td><span class="code-block">sudo LiME -o /mnt/forensics/memdump.lime -f lime</span></td></tr>
+            </table>
+
+            <div class="subsection-title">Análise Técnica</div>
+            <div>Analisar logs de SSH para conexões do IP 203.0.113.45. Verificar comandos executados pelo usuário 'sysadmin'. Examinar o conteúdo e comportamento do script '/tmp/update.sh'. Checar tentativas de movimentação lateral via SSH para outros hosts. Identificar alterações em arquivos de configuração e tentativas de ocultação de rastros.</div>
+
+            <div class="subsection-title">Ferramentas e Comandos</div>
+            <table>
+                <tr><th>Ferramenta</th><th>Uso</th><th>Exemplo</th></tr>
+                <tr><td>grep</td><td>Buscar conexões SSH do IP malicioso</td><td><span class="code-block">grep '203.0.113.45' /var/log/auth.log</span></td></tr><tr><td>last</td><td>Listar logins recentes e origem</td><td><span class="code-block">last -a | grep 'sysadmin'</span></td></tr><tr><td>diff</td><td>Comparar arquivos de configuração críticos</td><td><span class="code-block">diff /etc/ssh/sshd_config /mnt/backup/sshd_config</span></td></tr><tr><td>sha256sum</td><td>Calcular hash do script malicioso para IOC</td><td><span class="code-block">sha256sum /tmp/update.sh</span></td></tr><tr><td>volatility</td><td>Analisar dump de memória para processos suspeitos</td><td><span class="code-block">volatility -f memdump.lime --profile=LinuxUbuntu_18_04x64 pslist</span></td></tr>
+            </table>
+
+            <div class="subsection-title">Indicadores de Comprometimento</div>
+            <ul>
+                <li>IP de origem: 203.0.113.45</li><li>Usuário não autorizado: sysadmin</li><li>Arquivo malicioso: /tmp/update.sh</li><li>Conexões SSH internas não reconhecidas</li><li>Comandos de evasão: history -c, rm -rf /tmp/update.sh</li>
+            </ul>
+        </section>
+
+        <section>
+            <div class="section-title">Procedimentos de Contenção</div>
+            <ul>
+                <li><b>Ações Imediatas:</b> Revogar imediatamente o acesso do usuário 'sysadmin' e bloquear o IP 203.0.113.45 em todos os firewalls e sistemas afetados.</li>
+                <li><b>Isolamento do Sistema:</b> Isolar os hosts comprometidos da rede para evitar movimentação lateral. Exemplo: ifconfig eth0 down ou desconectar fisicamente o cabo de rede.</li>
+                <li><b>Bloqueio de Atividades Maliciosas:</b> Adicionar regra de firewall para bloquear o IP atacante: iptables -A INPUT -s 203.0.113.45 -j DROP. Remover o usuário 'sysadmin' e revogar suas permissões: userdel -r sysadmin.</li>
+                <li><b>Preservação de Evidências:</b> Antes de qualquer alteração, realizar imagens forenses dos discos e memória dos sistemas afetados. Utilizar ferramentas como dd para disco (dd if=/dev/sda of=/mnt/forensics/diskimage.dd bs=4M) e LiME para memória.</li>
+            </ul>
+        </section>
+
+        <section>
+            <div class="section-title">Etapas de Erradicação</div>
+            <ul>
+                <li><b>Remoção da Ameaça:</b> Remover scripts e arquivos maliciosos identificados: rm -f /tmp/update.sh. Excluir usuários não autorizados: userdel -r sysadmin. Verificar e restaurar arquivos de configuração alterados.</li>
+                <li><b>Correção de Vulnerabilidades:</b> Atualizar o serviço SSH para a versão mais recente disponível: apt-get update && apt-get install --only-upgrade openssh-server. Aplicar patches de segurança e desabilitar autenticação por senha, permitindo apenas chaves públicas.</li>
+                <li><b>Verificação de Movimento Lateral:</b> Analisar logs de SSH em outros hosts internos para conexões originadas do host comprometido. Exemplo: grep 'sshd.*Accepted' /var/log/auth.log | grep '<IP do host comprometido>'. Verificar criação de usuários suspeitos em outros sistemas.</li>
+            </ul>
+        </section>
+
+        <section>
+            <div class="section-title">Procedimentos de Recuperação</div>
+            <ul>
+                <li><b>Restauração do Sistema:</b> Restaurar sistemas afetados a partir de backups íntegros realizados antes do incidente. Validar que os backups não contenham artefatos maliciosos.</li>
+                <li><b>Validação de Integridade:</b> Executar verificação de integridade de arquivos críticos com AIDE: aide --check. Validar checksums de binários do sistema: sha256sum -c /mnt/forensics/baseline_hashes.txt.</li>
+                <li><b>Retorno às Operações:</b> Somente retornar o sistema à operação após confirmação de erradicação total, validação de integridade, atualização de todos os patches e revisão de logs para ausência de atividade maliciosa nas últimas 24h.</li>
+            </ul>
+        </section>
+
+        <section>
+            <div class="section-title">Lições Aprendidas & Prevenção</div>
+            <ul>
+                <li><b>Recomendações Preventivas:</b> Implementar regras de detecção no SIEM para alertar sobre criação de usuários privilegiados, execução de scripts em /tmp, e conexões SSH de IPs externos não autorizados. Exemplo de regra YARA para scripts maliciosos em /tmp.</li>
+                <li><b>Melhorias de Segurança:</b> Aplicar hardening no SSH: desabilitar root login, autenticação por senha e limitar acesso por IP. Implementar autenticação multifator para administradores. Monitorar continuamente logs de autenticação e comandos.</li>
+                <li><b>Atualizações de Políticas:</b> Atualizar políticas de resposta a incidentes para incluir coleta forense obrigatória. Revisar procedimentos de controle de acesso e revisão periódica de contas privilegiadas. Treinar equipe para identificar sinais de movimentação lateral e persistência.</li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>

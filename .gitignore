@@ -3,3 +3,6 @@ __pycache__
 UCO-0.7.0
 .env
 .DS_Store
+.venv
+tests/logs
+tests/results
