@@ -17,6 +17,7 @@ DEFAULT_OPENAI_LLM_MODEL = os.getenv("DEFAULT_OPENAI_LLM_MODEL", "gpt-4.1-2025-0
 DEFAULT_ANTHROPIC_LLM_MODEL = os.getenv(
     "DEFAULT_ANTHROPIC_LLM_MODEL", "claude-sonnet-4-20250514"
 )
+DEFAULT_HF_LLM_MODEL = os.getenv("DEFAULT_HF_LLM_MODEL", "openai/gpt-oss-20b:nebius")
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 

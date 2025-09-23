@@ -68,79 +68,82 @@
 
         <section>
             <div class="section-title">Contexto do Subgrafo</div>
-            <div>O subgrafo DEFEND indica que o incidente envolve execução remota de código via exploração de vulnerabilidade em serviço SSH exposto, com movimentação lateral detectada por conexões SSH suspeitas, criação de usuário não autorizado ('sysadmin') e transferência de arquivos maliciosos ('/tmp/update.sh'). O ataque foi originado do IP 203.0.113.45. O subgrafo relaciona os nós: 'Initial Access' (Exploit Public-Facing Application), 'Execution' (Command and Scripting Interpreter), 'Persistence' (Create Account), 'Defense Evasion' (Indicator Removal on Host), e 'Lateral Movement' (Remote Services: SSH).</div>
+            <div>The subgraph highlights the Credential Access Technique hierarchy, specifically the Brute Force technique (T1110) and its sub-techniques, as well as related concepts such as SSH, firewall, and user authentication. This context informs the playbook’s focus on SSH brute‑force detection, mitigation, and prevention.</div>
         </section>
 
         <section>
             <div class="section-title">Resumo do Incidente</div>
             <ul>
-                <li><b>Visão Geral:</b> Foi detectada a exploração de uma vulnerabilidade no serviço SSH exposto, permitindo execução remota de comandos. O atacante criou um usuário não autorizado ('sysadmin'), transferiu e executou um script malicioso ('/tmp/update.sh'), e realizou movimentação lateral para outros hosts internos via SSH.</li>
-                <li><b>Classificação Técnica:</b> Exploit Public-Facing Application (Initial Access), Command and Scripting Interpreter (Execution), Create Account (Persistence), Indicator Removal on Host (Defense Evasion), Remote Services: SSH (Lateral Movement)</li>
-                <li><b>Avaliação de Severidade:</b> Alta. O atacante obteve acesso privilegiado, criou persistência, executou código arbitrário e iniciou movimentação lateral. Há risco de comprometimento de múltiplos sistemas e exfiltração de dados.</li>
-                <li><b>Impacto Potencial:</b> Comprometimento de credenciais, acesso não autorizado a sistemas internos, possível exfiltração de dados sensíveis, interrupção de operações e risco de propagação para outros ativos críticos.</li>
+                <li><b>Visão Geral:</b> On 2025-07-10 at 10:30 UTC, the firewall logged 15 failed SSH login attempts from 192.168.1.100 targeting user 'admin' on host 10.0.0.1 within a 5‑minute window, indicating a brute‑force credential‑guessing attack.</li>
+                <li><b>Classificação Técnica:</b> Credential Access – Brute Force (T1110)</li>
+                <li><b>Avaliação de Severidade:</b> High – The attack targets privileged accounts, potentially leading to unauthorized system access and lateral movement.</li>
+                <li><b>Impacto Potencial:</b> Compromise of the admin account could allow full system control, data exfiltration, persistence, and further attacks across the network.</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Etapas de Investigação</div>
             <div class="subsection-title">Etapas de Triagem</div>
-            <div>1. Identificar hosts afetados pelo acesso SSH suspeito. 2. Verificar criação de usuários recentes. 3. Localizar scripts e arquivos maliciosos em /tmp e diretórios de usuários. 4. Analisar logs de autenticação e comandos executados.</div>
+            <div>1. Verify the alert source and timestamp.
+2. Confirm the affected host and port.
+3. Check for additional anomalous authentication events.
+4. Correlate with other logs (system, application, network).</div>
 
             <div class="subsection-title">Coleta de Evidências</div>
             <table>
                 <tr><th>Descrição</th><th>Comando</th></tr>
-                <tr><td>Coletar logs de autenticação SSH</td><td><span class="code-block">cp /var/log/auth.log /mnt/forensics/auth.log</span></td></tr><tr><td>Exportar histórico de comandos do usuário comprometido</td><td><span class="code-block">cp /home/sysadmin/.bash_history /mnt/forensics/sysadmin_bash_history</span></td></tr><tr><td>Preservar o script malicioso para análise</td><td><span class="code-block">cp /tmp/update.sh /mnt/forensics/update.sh</span></td></tr><tr><td>Coletar lista de usuários criados recentemente</td><td><span class="code-block">awk -F: '$3 >= 1000 {print $1,$3,$6}' /etc/passwd > /mnt/forensics/new_users.txt</span></td></tr><tr><td>Dump da memória para análise forense</td><td><span class="code-block">sudo LiME -o /mnt/forensics/memdump.lime -f lime</span></td></tr>
+                <tr><td>Collect recent authentication logs from the SSH daemon.</td><td><span class="code-block">grep -i "Failed password" /var/log/auth.log | tail -n 200 > /tmp/auth_failures.log</span></td></tr><tr><td>Capture current SSH configuration for audit.</td><td><span class="code-block">cat /etc/ssh/sshd_config > /tmp/sshd_config_backup</span></td></tr><tr><td>Snapshot the shadow file to verify credential integrity.</td><td><span class="code-block">cp /etc/shadow /tmp/shadow_snapshot</span></td></tr><tr><td>Export firewall rules for forensic preservation.</td><td><span class="code-block">iptables-save > /tmp/iptables_rules.bak</span></td></tr>
             </table>
 
             <div class="subsection-title">Análise Técnica</div>
-            <div>Analisar logs de SSH para conexões do IP 203.0.113.45. Verificar comandos executados pelo usuário 'sysadmin'. Examinar o conteúdo e comportamento do script '/tmp/update.sh'. Checar tentativas de movimentação lateral via SSH para outros hosts. Identificar alterações em arquivos de configuração e tentativas de ocultação de rastros.</div>
+            <div>Analyze the authentication logs for patterns (e.g., repeated usernames, timing). Verify SSH settings (PermitRootLogin, MaxAuthTries). Check for any unusual network connections on port 22. Use auditd to monitor subsequent login attempts. Correlate with external threat intel for the source IP.</div>
 
             <div class="subsection-title">Ferramentas e Comandos</div>
             <table>
                 <tr><th>Ferramenta</th><th>Uso</th><th>Exemplo</th></tr>
-                <tr><td>grep</td><td>Buscar conexões SSH do IP malicioso</td><td><span class="code-block">grep '203.0.113.45' /var/log/auth.log</span></td></tr><tr><td>last</td><td>Listar logins recentes e origem</td><td><span class="code-block">last -a | grep 'sysadmin'</span></td></tr><tr><td>diff</td><td>Comparar arquivos de configuração críticos</td><td><span class="code-block">diff /etc/ssh/sshd_config /mnt/backup/sshd_config</span></td></tr><tr><td>sha256sum</td><td>Calcular hash do script malicioso para IOC</td><td><span class="code-block">sha256sum /tmp/update.sh</span></td></tr><tr><td>volatility</td><td>Analisar dump de memória para processos suspeitos</td><td><span class="code-block">volatility -f memdump.lime --profile=LinuxUbuntu_18_04x64 pslist</span></td></tr>
+                <tr><td>fail2ban</td><td>Automated banning of IPs after repeated failures.</td><td><span class="code-block">fail2ban-client set sshd bantime 86400</span></td></tr><tr><td>auditd</td><td>Real‑time monitoring of authentication events.</td><td><span class="code-block">auditctl -w /var/log/auth.log -p wa</span></td></tr><tr><td>ss</td><td>Inspect active SSH connections.</td><td><span class="code-block">ss -tuln | grep :22</span></td></tr><tr><td>grep</td><td>Search logs for failed attempts.</td><td><span class="code-block">grep -i "Failed password" /var/log/auth.log</span></td></tr><tr><td>md5sum</td><td>Verify integrity of critical files.</td><td><span class="code-block">md5sum /etc/shadow</span></td></tr>
             </table>
 
             <div class="subsection-title">Indicadores de Comprometimento</div>
             <ul>
-                <li>IP de origem: 203.0.113.45</li><li>Usuário não autorizado: sysadmin</li><li>Arquivo malicioso: /tmp/update.sh</li><li>Conexões SSH internas não reconhecidas</li><li>Comandos de evasão: history -c, rm -rf /tmp/update.sh</li>
+                <li>Source IP: 192.168.1.100</li><li>Destination IP: 10.0.0.1</li><li>Port: 22</li><li>User: admin</li><li>15 failed login attempts within 5 minutes</li><li>Repeated 'Failed password' entries in /var/log/auth.log</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Procedimentos de Contenção</div>
             <ul>
-                <li><b>Ações Imediatas:</b> Revogar imediatamente o acesso do usuário 'sysadmin' e bloquear o IP 203.0.113.45 em todos os firewalls e sistemas afetados.</li>
-                <li><b>Isolamento do Sistema:</b> Isolar os hosts comprometidos da rede para evitar movimentação lateral. Exemplo: ifconfig eth0 down ou desconectar fisicamente o cabo de rede.</li>
-                <li><b>Bloqueio de Atividades Maliciosas:</b> Adicionar regra de firewall para bloquear o IP atacante: iptables -A INPUT -s 203.0.113.45 -j DROP. Remover o usuário 'sysadmin' e revogar suas permissões: userdel -r sysadmin.</li>
-                <li><b>Preservação de Evidências:</b> Antes de qualquer alteração, realizar imagens forenses dos discos e memória dos sistemas afetados. Utilizar ferramentas como dd para disco (dd if=/dev/sda of=/mnt/forensics/diskimage.dd bs=4M) e LiME para memória.</li>
+                <li><b>Ações Imediatas:</b> Immediately block the offending IP using the firewall: iptables -A INPUT -s 192.168.1.100 -j DROP.</li>
+                <li><b>Isolamento do Sistema:</b> If the host is part of a critical subnet, isolate it by disabling its network interface or placing it in a quarantine VLAN.</li>
+                <li><b>Bloqueio de Atividades Maliciosas:</b> Configure fail2ban to ban the IP for 24 hours and set MaxAuthTries to 3 in /etc/ssh/sshd_config. Restart sshd after changes.</li>
+                <li><b>Preservação de Evidências:</b> Before making any configuration changes, copy all relevant logs and configuration files to a secure, write‑protected storage. Use immutable logging (e.g., rsyslog with disk‑based journaling).</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Etapas de Erradicação</div>
             <ul>
-                <li><b>Remoção da Ameaça:</b> Remover scripts e arquivos maliciosos identificados: rm -f /tmp/update.sh. Excluir usuários não autorizados: userdel -r sysadmin. Verificar e restaurar arquivos de configuração alterados.</li>
-                <li><b>Correção de Vulnerabilidades:</b> Atualizar o serviço SSH para a versão mais recente disponível: apt-get update && apt-get install --only-upgrade openssh-server. Aplicar patches de segurança e desabilitar autenticação por senha, permitindo apenas chaves públicas.</li>
-                <li><b>Verificação de Movimento Lateral:</b> Analisar logs de SSH em outros hosts internos para conexões originadas do host comprometido. Exemplo: grep 'sshd.*Accepted' /var/log/auth.log | grep '<IP do host comprometido>'. Verificar criação de usuários suspeitos em outros sistemas.</li>
+                <li><b>Remoção da Ameaça:</b> Remove any malicious cron jobs or scheduled tasks that may have been created by the attacker. Verify /etc/cron.* and /var/spool/cron for unknown entries.</li>
+                <li><b>Correção de Vulnerabilidades:</b> Ensure SSH is patched to the latest version, enforce key‑based authentication, disable root login, and set a strong MaxAuthTries limit. Apply any pending OS security updates.</li>
+                <li><b>Verificação de Movimento Lateral:</b> Run a host‑based intrusion detection scan (e.g., chkrootkit, rkhunter) and review network logs for unusual outbound connections. Verify that no backdoors or remote shells remain.</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Procedimentos de Recuperação</div>
             <ul>
-                <li><b>Restauração do Sistema:</b> Restaurar sistemas afetados a partir de backups íntegros realizados antes do incidente. Validar que os backups não contenham artefatos maliciosos.</li>
-                <li><b>Validação de Integridade:</b> Executar verificação de integridade de arquivos críticos com AIDE: aide --check. Validar checksums de binários do sistema: sha256sum -c /mnt/forensics/baseline_hashes.txt.</li>
-                <li><b>Retorno às Operações:</b> Somente retornar o sistema à operação após confirmação de erradicação total, validação de integridade, atualização de todos os patches e revisão de logs para ausência de atividade maliciosa nas últimas 24h.</li>
+                <li><b>Restauração do Sistema:</b> Restore the host from the latest clean backup if the integrity of critical files is compromised. Otherwise, re‑install the OS and re‑apply configuration from the backup snapshot.</li>
+                <li><b>Validação de Integridade:</b> Recalculate checksums of /etc/shadow, /etc/ssh/sshd_config, and other critical binaries. Compare against known good values from the backup or vendor signatures.</li>
+                <li><b>Retorno às Operações:</b> After validation, re‑enable the host in the network, remove the firewall block on the IP, and monitor for any repeat attempts. Document the incident and update the incident log.</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Lições Aprendidas & Prevenção</div>
             <ul>
-                <li><b>Recomendações Preventivas:</b> Implementar regras de detecção no SIEM para alertar sobre criação de usuários privilegiados, execução de scripts em /tmp, e conexões SSH de IPs externos não autorizados. Exemplo de regra YARA para scripts maliciosos em /tmp.</li>
-                <li><b>Melhorias de Segurança:</b> Aplicar hardening no SSH: desabilitar root login, autenticação por senha e limitar acesso por IP. Implementar autenticação multifator para administradores. Monitorar continuamente logs de autenticação e comandos.</li>
-                <li><b>Atualizações de Políticas:</b> Atualizar políticas de resposta a incidentes para incluir coleta forense obrigatória. Revisar procedimentos de controle de acesso e revisão periódica de contas privilegiadas. Treinar equipe para identificar sinais de movimentação lateral e persistência.</li>
+                <li><b>Recomendações Preventivas:</b> Implement rate‑limiting on SSH, enforce MFA for privileged accounts, and deploy a centralized SIEM rule to detect rapid failed logins. Use YARA rules to flag suspicious SSH binaries.</li>
+                <li><b>Melhorias de Segurança:</b> Enable auditd for all authentication events, enforce strict SSH hardening (PermitRootLogin no, PasswordAuthentication no), and regularly rotate SSH keys. Conduct quarterly penetration tests focusing on credential access.</li>
+                <li><b>Atualizações de Políticas:</b> Update the incident response policy to include mandatory fail2ban configuration for all SSH servers, define a 24‑hour ban policy for brute‑force attempts, and require two‑factor authentication for admin accounts.</li>
             </ul>
         </section>
     </div>

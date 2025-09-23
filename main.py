@@ -12,7 +12,7 @@ from src.llm_orchestration.llm_interface import (
     invoke_planner,
     invoke_playbook,
 )
-from src.llm_orchestration.llms.openai_llm import OpenAILLM
+from src.llm_orchestration.llms.huggingface_llm import HuggingFaceLLM
 from src.utils.html import playbook_to_html
 
 logger.remove()
@@ -431,7 +431,8 @@ def generate_playbook(
         neo4j = Neo4jManager()
         graph_retriever = GraphRetriever(neo4j)
         # llm = OllamaLLM()
-        llm = OpenAILLM()
+        # llm = OpenAILLM()
+        llm = HuggingFaceLLM()
 
         all_nodes = graph_retriever.get_top_k_nodes()
         all_labels = [
