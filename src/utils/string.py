@@ -2,46 +2,46 @@ import json
 import re
 
 
-def clean_json(json_str: str) -> str:
+def clean_json(json_str: str) -> dict:
     """
-    Extracts JSON content from various formats in a string, including:
-    - Markdown code blocks (```json ... ``` or ``` ... ```)
-    - JSON embedded in text
-    - Raw JSON
+    Extracts and parses the first valid JSON object from a messy string.
+    Handles random prefixes, markdown blocks, and embedded JSON structures.
 
     Args:
-        json_str (str): The string containing JSON in any format.
+        json_str (str): The raw input string potentially containing JSON.
 
     Returns:
-        dict: The parsed JSON as a dictionary.
+        dict: The parsed JSON object.
     """
-    pattern_json = r"```json\s*(.*?)\s*```"
-    match = re.search(pattern_json, json_str, flags=re.DOTALL)
-    if match:
-        json_content = match.group(1).strip()
-    else:
-        pattern_code = r"```\s*(.*?)\s*```"
-        match = re.search(pattern_code, json_str, flags=re.DOTALL)
-        if match:
-            json_content = match.group(1).strip()
-        else:
-            pattern_braces = r"({[\s\S]*?})"
-            pattern_brackets = r"(\[[\s\S]*?\])"
-            match_obj = re.search(pattern_braces, json_str)
-            match_arr = re.search(pattern_brackets, json_str)
-            if match_obj and (not match_arr or match_obj.start() < match_arr.start()):
-                json_content = match_obj.group(1).strip()
-            elif match_arr:
-                json_content = match_arr.group(1).strip()
-            else:
-                json_content = json_str.strip()
+    # Normalize newlines and whitespace
+    json_str = json_str.replace("\r\n", "\n").replace("\r", "\n")
 
-    try:
-        return json.loads(json_content)
-    except json.JSONDecodeError:
-        json_content_fixed = re.sub(r",\s*([}\]])", r"\1", json_content)
+    # Remove markdown fences like json or
+    json_str = re.sub(r"(?:json)?", "", json_str, flags=re.IGNORECASE)
+    json_str = json_str.replace("", "")
+
+    # Match all possible brace-based JSON candidates
+    brace_stack = []
+    json_candidates = []
+    start = None
+
+    for i, char in enumerate(json_str):
+        if char == "{":
+            if not brace_stack:
+                start = i
+            brace_stack.append(char)
+        elif char == "}":
+            if brace_stack:
+                brace_stack.pop()
+                if not brace_stack and start is not None:
+                    candidate = json_str[start : i + 1]
+                    json_candidates.append(candidate)
+
+    # Try parsing candidates until one works
+    for candidate in json_candidates:
         try:
-            return json.loads(json_content_fixed)
-        except Exception as e:
-            print(f"Invalid JSON content: {json_content}")
-            raise e
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+
+    raise ValueError("No valid JSON found. Even in the darkest corners.")
