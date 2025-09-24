@@ -44,4 +44,5 @@ def clean_json(json_str: str) -> dict:
         except json.JSONDecodeError:
             continue
 
+    print("The JSON string was: ", json_str)
     raise ValueError("No valid JSON found. Even in the darkest corners.")

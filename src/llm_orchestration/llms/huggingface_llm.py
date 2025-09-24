@@ -32,7 +32,7 @@ class HuggingFaceLLM(LLM):
         self,
         prompt: str,
         system_message: str = None,
-        temperature: float = 0.2,
+        temperature: float = 0.1,
         max_tokens: int = 2000,
     ) -> Dict[str, Any]:
         try:
