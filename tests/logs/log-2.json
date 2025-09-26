@@ -1,0 +1,21 @@
+{
+  "incident_title": "IoT Device Reconnaissance and Multi-Architecture Botnet Preparation Campaign",
+  "logs": [
+    {"eventid":"cowrie.login.success","username":"root","password":"1.oN%cpi","message":"login attempt [root/1.oN%cpi] succeeded","sensor":"3df7683019db","timestamp":"2025-03-03T04:08:16.505176Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"},
+    {"eventid":"cowrie.session.params","arch":"linux-sparc64-msb","message":[],"sensor":"3df7683019db","timestamp":"2025-03-03T04:08:16.547398Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"},
+    {"eventid":"cowrie.command.input","input":">/usr/.a && cd /usr/; rm -rf .a","message":"CMD: >/usr/.a && cd /usr/; rm -rf .a","sensor":"3df7683019db","timestamp":"2025-03-03T04:08:17.636361Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"},
+    {"eventid":"cowrie.command.input","input":">/dev/shm/.a && cd /dev/shm/; rm -rf .a","message":"CMD: >/dev/shm/.a && cd /dev/shm/; rm -rf .a","sensor":"3df7683019db","timestamp":"2025-03-03T04:08:17.638685Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"},
+    {"eventid":"cowrie.command.input","input":">/tmp/.a && cd /tmp/; rm -rf .a","message":"CMD: >/tmp/.a && cd /tmp/; rm -rf .a","sensor":"3df7683019db","timestamp":"2025-03-03T04:08:17.640706Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"},
+    {"eventid":"cowrie.command.input","input":"for i in `cat /proc/mounts|grep tmpfs|grep -v noexec|cut -d ' ' -f 2`; do >$i/.a && cd $i;done","message":"CMD: for i in `cat /proc/mounts|grep tmpfs|grep -v noexec|cut -d ' ' -f 2`; do >$i/.a && cd $i;done","sensor":"3df7683019db","timestamp":"2025-03-03T04:08:17.643165Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"},
+    {"eventid":"cowrie.command.input","input":"/bin/busybox wget --help; /bin/busybox ftpget --help; /bin/busybox echo -e '\\x67\\x61\\x79\\x66\\x67\\x74';","message":"CMD: /bin/busybox wget --help; /bin/busybox ftpget --help; /bin/busybox echo -e '\\x67\\x61\\x79\\x66\\x67\\x74';","sensor":"3df7683019db","timestamp":"2025-03-03T04:08:17.645238Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"},
+    {"eventid":"cowrie.session.params","arch":"bsd-mips-lsb","message":[],"sensor":"3df7683019db","timestamp":"2025-03-03T04:08:20.809302Z","src_ip":"220.133.208.191","session":"4ea779f7a40e"},
+    {"eventid":"cowrie.session.params","arch":"linux-mips-msb","message":[],"sensor":"3df7683019db","timestamp":"2025-03-03T04:08:24.977865Z","src_ip":"220.133.208.191","session":"ee0c52c9c4c8"},
+    {"eventid":"cowrie.session.params","arch":"linux-nios-msb","message":[],"sensor":"3df7683019db","timestamp":"2025-03-03T04:08:28.337811Z","src_ip":"220.133.208.191","session":"b6eeba7443c8"},
+    {"eventid":"cowrie.session.params","arch":"linux-mips64-msb","message":[],"sensor":"3df7683019db","timestamp":"2025-03-03T04:08:36.284573Z","src_ip":"220.133.208.191","session":"965af0cfa1fd"},
+    {"eventid":"cowrie.session.params","arch":"linux-x86-lsb","message":[],"sensor":"3df7683019db","timestamp":"2025-03-03T04:08:40.457908Z","src_ip":"220.133.208.191","session":"aa93076d17b5"},
+    {"eventid":"cowrie.session.params","arch":"bsd-aarch64-msb","message":[],"sensor":"3df7683019db","timestamp":"2025-03-03T04:08:44.676914Z","src_ip":"220.133.208.191","session":"eda1af788859"},
+    {"eventid":"cowrie.command.success","input":"wget --help","message":"Command found: wget --help","sensor":"3df7683019db","timestamp":"2025-03-03T04:08:17.645483Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"},
+    {"eventid":"cowrie.command.success","input":"ftpget --help","message":"Command found: ftpget --help","sensor":"3df7683019db","timestamp":"2025-03-03T04:08:17.645814Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"},
+    {"eventid":"cowrie.command.success","input":"echo -e \\x67\\x61\\x79\\x66\\x67\\x74","message":"Command found: echo -e \\x67\\x61\\x79\\x66\\x67\\x74","sensor":"3df7683019db","timestamp":"2025-03-03T04:08:17.646093Z","src_ip":"220.133.208.191","session":"a40eb74c3cc3"}
+  ]
+}
