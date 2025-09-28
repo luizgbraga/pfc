@@ -1,0 +1,106 @@
+{
+  "context_from_subgraph": "Subgrafo fornecido cont\u00e9m informa\u00e7\u00f5es sobre um incidente de ransomware que afeta servidores Windows.",
+  "incident_summary": {
+    "overview": "Um incidente de ransomware foi detectado em servidores Windows, resultando em criptografia de arquivos importantes.",
+    "technical_classification": "Ransomware - Tipo: Locker",
+    "severity_assessment": "Alta - Impacto significativo nos sistemas cr\u00edticos e perda de dados.",
+    "potential_impact": "Paralisa\u00e7\u00e3o total dos servi\u00e7os afetados, perda de dados n\u00e3o recuper\u00e1veis, danos financeiros e reputacionais."
+  },
+  "investigation_steps": {
+    "triage_steps": "Verificar logs de eventos do sistema, registros de seguran\u00e7a e arquivos de auditoria para identificar atividades suspeitas.",
+    "evidence_collection": [
+      {
+        "description": "Coleta de logs de eventos do sistema.",
+        "command": "wevtutil qe System /rd:true /c:30000 /f:xml > system_events.xml"
+      },
+      {
+        "description": "Captura de mem\u00f3ria usando Volatility.",
+        "command": "vol.py --profile=Win7SP1x64 memdump -f /dev/mem > memory_dump.raw"
+      }
+    ],
+    "technical_analysis": "Analisar logs e mem\u00f3ria para identificar processos maliciosos, arquivos criptografados e atividades de rede suspeitas.",
+    "tools_and_commands": [
+      {
+        "tool": "Volatility",
+        "usage": "Para an\u00e1lise de mem\u00f3ria.",
+        "example": "vol.py --profile=Win7SP1x64 pslist -f memory_dump.raw"
+      },
+      {
+        "tool": "YARA",
+        "usage": "Para identificar padr\u00f5es de malware.",
+        "example": "yara -r ransomware_rules.yar /path/to/extracted/files"
+      }
+    ],
+    "indicators_of_compromise": [
+      "Processos desconhecidos executando scripts maliciosos.",
+      "Arquivos .exe criptografados.",
+      "Conex\u00f5es de rede para IPs conhecidos de C2."
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Desligar imediatamente os servidores afetados para evitar mais criptografia de arquivos.",
+    "system_isolation": "Isolar os servidores afetados da rede interna.",
+    "malicious_activity_blocking": "Bloquear IPs e dom\u00ednios associados ao ransomware usando firewalls.",
+    "evidence_preservation": "Preservar todas as evid\u00eancias antes de qualquer altera\u00e7\u00e3o, incluindo c\u00f3pias de seguran\u00e7a de discos r\u00edgidos."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover arquivos maliciosos e processos relacionados ao ransomware.",
+    "vulnerability_fix": "Aplicar patches de seguran\u00e7a para corrigir vulnerabilidades exploradas pelo ransomware.",
+    "lateral_movement_check": "Verificar se houve movimenta\u00e7\u00e3o lateral atrav\u00e9s de auditoria de logs de autentica\u00e7\u00e3o e conex\u00f5es de rede."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar os sistemas afetados a partir de backups recentes.",
+    "integrity_validation": "Verificar a integridade dos sistemas restaurados usando checksums e compara\u00e7\u00e3o de hashes.",
+    "return_to_operations": "Retornar aos opera\u00e7\u00f5es normais ap\u00f3s confirma\u00e7\u00e3o de que todos os sistemas est\u00e3o funcionando corretamente."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar detec\u00e7\u00e3o proativa de ransomware em SIEM e EDR.",
+    "security_improvements": "Melhorar hardening de sistemas e implementar pol\u00edticas de backup robustas.",
+    "policy_updates": "Atualizar pol\u00edticas internas para incluir melhores pr\u00e1ticas de seguran\u00e7a e resposta a incidentes."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#User": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "labels": [
+          "User"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

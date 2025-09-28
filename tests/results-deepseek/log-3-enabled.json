@@ -1,0 +1,111 @@
+{
+  "context_from_subgraph": "foo",
+  "incident_summary": {
+    "overview": "The incident involves an SSH tunneling attack with port forwarding used for email relay abuse. The attack attempts to establish unauthorized connections and potentially exploit credentials.",
+    "technical_classification": "The incident is classified as a Credential Access Technique (CAT) based on the observed behavior of attempting to gain unauthorized access using various credentials and establishing malicious connections.",
+    "severity_assessment": "High severity due to the potential for unauthorized access, data exfiltration, and misuse of systems for malicious activities.",
+    "potential_impact": "Potential impact includes exposure of credentials, unauthorized system access, data exfiltration, and possible spam or malicious email activities."
+  },
+  "investigation_steps": {
+    "triage_steps": "Initial steps include checking for active connections, identifying the source IP, and verifying the presence of malicious activity in logs.",
+    "evidence_collection": [
+      {
+        "description": "Collect SSH connection logs for analysis.",
+        "command": "ssh -L *:localhost:22"
+      },
+      {
+        "description": "Identify the source IP and port used in the attack.",
+        "command": "netstat -n | grep 80.94.95.15"
+      }
+    ],
+    "technical_analysis": "Analyze logs for patterns indicating credential usage, connection attempts, and potential malicious activity such as port forwarding.",
+    "tools_and_commands": [
+      {
+        "tool": "grep",
+        "usage": "Search logs for specific patterns.",
+        "example": "grep 'root' /path/to/logs/auth.log"
+      },
+      {
+        "tool": "netstat",
+        "usage": "Monitor and analyze network connections.",
+        "example": "netstat -tun | grep 22"
+      },
+      {
+        "tool": "volatility",
+        "usage": "Memory analysis tool for detecting malicious activities.",
+        "example": "volatility.exe -y -f memory.dmp"
+      }
+    ],
+    "indicators_of_compromise": [
+      "IP addresses: 80.94.95.15, 81.19.77.166",
+      "Port: 22 (SSH)",
+      "Hashes: 57446c12547a668110aa237e5965e374"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Immediate actions include disconnecting the affected system and blocking the source IP.",
+    "system_isolation": "Isolate the system from the network to prevent further propagation.",
+    "malicious_activity_blocking": "Block the source IP and port used in the attack.",
+    "evidence_preservation": "Preserve all logs and evidence before any system changes."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remove any malicious files or scripts identified during analysis.",
+    "vulnerability_fix": "Patch any identified vulnerabilities related to the incident.",
+    "lateral_movement_check": "Verify that there are no lateral movements or additional compromised systems."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restore the system to a known good state using backups.",
+    "integrity_validation": "Verify system integrity using checksums and logs.",
+    "return_to_operations": "Resume normal operations after verifying the system is secure."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implement multi-factor authentication, regular security audits, and network filtering.",
+    "security_improvements": "Harden SSH servers, monitor for suspicious login attempts, and use SIEM tools for proactive detection.",
+    "policy_updates": "Update access policies and incident response procedures."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AssetVulnerabilityEnumeration": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AssetVulnerabilityEnumeration",
+        "labels": [
+          "Asset Vulnerability Enumeration"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficFiltering": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficFiltering",
+        "labels": [
+          "Network Traffic Filtering"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessLineageAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessLineageAnalysis",
+        "labels": [
+          "Process Lineage Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsCreateFileA": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsCreateFileA",
+        "labels": [
+          "Windows CreateFileA"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

@@ -1,0 +1,524 @@
+{
+  "context_from_subgraph": "The subgraph confirms that UserAccount is a core entity that can be exploited via CredentialAccessTechnique, particularly through DefaultUserAccount (e.g., root) with weak credentials (CWE-1393: Use of Default Password). The attack leverages T1078 (Valid Accounts) by compromising a privileged account (root) and uses direct-tcpip forwarding (T1098: Account Manipulation) to tunnel traffic, establishing a bridge for external relay abuse. NetworkTraffic is the primary artifact, and NetworkTrafficFiltering is the relevant defense technique to block such tunneling.",
+  "incident_summary": {
+    "overview": "An attacker successfully brute-forced SSH credentials on a honeypot system using the default root account with weak password '1qq2w3e4r5t', then established a direct-tcpip SSH tunnel to forward traffic to an external SMTP server (81.19.77.166:587) for potential email relay abuse. The session lasted only 4 seconds, indicating automated tooling.",
+    "technical_classification": "Credential Access (T1078, T1136) + Lateral Movement (T1098) via SSH Tunneling",
+    "severity_assessment": "High - Compromise of privileged account (root) enables full system control and abuse as a relay for spam/phishing. The use of direct-tcpip forwarding bypasses firewall restrictions and can be used to exfiltrate data or relay malicious emails without direct access to the target SMTP server.",
+    "potential_impact": "System integrity compromised; potential for email spam/phishing campaigns originating from the host; risk of lateral movement to internal networks if this is a production system; reputation damage due to blacklisted IP; possible violation of email compliance policies (e.g., DMARC, SPF)."
+  },
+  "investigation_steps": {
+    "triage_steps": "Verify the source IP (80.94.95.15) against threat intelligence feeds (e.g., AbuseIPDB, VirusTotal). Correlate SSH login success with direct-tcpip request timestamp. Confirm session duration and client fingerprint (HASSH: 57446c12547a668110aa237e5965e374) for tool identification (libssh2_1.9.0).",
+    "evidence_collection": [
+      {
+        "description": "Extract all SSH logs from Cowrie for the session be4caf9f42f2",
+        "command": "grep 'be4caf9f42f2' /var/log/cowrie/cowrie..log"
+      },
+      {
+        "description": "Dump full network capture for source IP 80.94.95.15 during the incident window",
+        "command": "tcpdump -i any host 80.94.95.15 and port 22 -w /evidence/ssh_attack_80.94.95.15.pcap"
+      },
+      {
+        "description": "Extract and hash the SSH client HASSH fingerprint for IOC persistence",
+        "command": "echo '57446c12547a668110aa237e5965e374' | sha256sum"
+      },
+      {
+        "description": "Export all login attempts for root user from the log",
+        "command": "grep 'cowrie.login' /var/log/cowrie/cowrie..log | grep 'root'"
+      }
+    ],
+    "technical_analysis": "Analyze the direct-tcpip request to 81.19.77.166:587 \u2014 port 587 is used for SMTP submission. The data payload 'b'E'' suggests the attacker initiated an SMTP handshake (likely 'EHLO' command). The attacker did not establish a full shell session, indicating automated tooling (e.g., sshuttle, plink, or custom tunneling script). Validate if the target IP (81.19.77.166) is known for spam or has been previously abused.",
+    "tools_and_commands": [
+      {
+        "tool": "HASSH",
+        "usage": "Identify SSH client tooling based on key exchange and cipher preferences",
+        "example": "hassh -f 57446c12547a668110aa237e5965e374"
+      },
+      {
+        "tool": "grep",
+        "usage": "Filter logs for specific sessions or IPs",
+        "example": "grep 'session\":\"be4caf9f42f2\"' /var/log/cowrie/cowrie..log"
+      },
+      {
+        "tool": "tcpdump",
+        "usage": "Capture raw network traffic for forensic analysis",
+        "example": "tcpdump -r /evidence/ssh_attack_80.94.95.15.pcap -A | grep -i 'EHLO'"
+      },
+      {
+        "tool": "shasum",
+        "usage": "Generate SHA256 hash of IOCs for correlation",
+        "example": "echo -n '81.19.77.166:587' | sha256sum"
+      }
+    ],
+    "indicators_of_compromise": [
+      "80.94.95.15",
+      "57446c12547a668110aa237e5965e374",
+      "root/1qq2w3e4r5t",
+      "81.19.77.166:587",
+      "direct-tcpip.request",
+      "SSH-2.0-libssh2_1.9.0"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Isolate the affected system from all outbound and inbound traffic immediately. Disable SSH access for root user and enforce key-only authentication. Block the source IP at the network perimeter.",
+    "system_isolation": "bash\niptables -A INPUT -s 80.94.95.15 -j DROP\niptables -A OUTPUT -d 81.19.77.166 -j DROP\nsystemctl stop sshd\n",
+    "malicious_activity_blocking": "bash\n# Block malicious IP and port at firewall\niptables -A OUTPUT -p tcp -d 81.19.77.166 --dport 587 -j DROP\n# Block HASSH fingerprinted client at IDS/IPS\n# Add to Suricata rule: alert tcp any any -> any 22 (msg:\"Malicious SSH Client libssh2_1.9.0\"; hassh:\"57446c12547a668110aa237e5965e374\"; sid:1000001; rev:1;)\n",
+    "evidence_preservation": "bash\n# Preserve full log and pcap\nmkdir -p /evidence/incident_20250501\ncp /var/log/cowrie/cowrie..log /evidence/incident_20250501/\ncp /evidence/ssh_attack_80.94.95.15.pcap /evidence/incident_20250501/\nsha256sum /evidence/incident_20250501/* > /evidence/incident_20250501/checksums.sha256\n"
+  },
+  "eradication_steps": {
+    "threat_removal": "Remove the compromised root password by enforcing a strong, unique password or disabling password authentication entirely. Audit /etc/passwd and /etc/shadow for unauthorized accounts. Use chkrootkit and rkhunter to scan for rootkits: chkrootkit && rkhunter --check.",
+    "vulnerability_fix": "bash\n# Disable root SSH login\nsed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config\n# Disable password authentication\nsed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config\n# Reload SSH\nsystemctl reload sshd\n# Enforce password complexity: set minimum 16 chars, no dictionary words\npam_pwquality.so minlen=16 difok=6 maxrepeat=2\n",
+    "lateral_movement_check": "bash\n# Check for suspicious cron jobs\nfind /var/spool/cron -type f -exec ls -la {} \\;\n# Check for hidden files in user home directories\nfind /root -type f -name \".*\" -not -path \"*.ssh*\" -ls\n# Check for open ports listening on 127.0.0.1 that could be tunnel targets\nnetstat -tuln | grep -E \"(127.0.0.1|::1)\"\n# Check for SSH authorized_keys modifications\ngrep -v '^#' /root/.ssh/authorized_keys\n"
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restore SSH configuration from a known-good backup. Rebuild the system from a clean, signed image if the system is production-critical. If reusing, ensure all logs are archived and all user accounts are audited. Re-enable SSH only after hardening.",
+    "integrity_validation": "bash\n# Verify SSH config integrity\nsha256sum /etc/ssh/sshd_config\n# Validate system binaries\nrpm -Va | grep -v \"^\\.\"  # RHEL/CentOS\n# Check for unexpected files in /root\nfind /root -type f -mtime -7 -ls\n# Validate that root password is no longer set to weak value\nawk -F: '$1 == \"root\" {print $2}' /etc/shadow | grep -v '^[!*]'",
+    "return_to_operations": "Return to operations only after: 1) All IOCs are blocked at perimeter, 2) SSH is hardened with key-only auth and root login disabled, 3) No other accounts show signs of compromise, 4) Integrity checks pass, and 5) SIEM alerts confirm no further connections from 80.94.95.15 or to 81.19.77.166:587 for 72 hours."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Deploy HASSH-based detection in SIEM to flag libssh2_1.9.0 or other known malicious client fingerprints. Create YARA rule to detect direct-tcpip requests in SSH logs: rule SSH_DirectTCPIP_Tunnel { strings: $tcpip = \"direct-tcpip.request\" condition: $tcpip }",
+    "security_improvements": "Enforce MFA on all privileged accounts. Implement automated credential rotation for service accounts. Deploy network segmentation to prevent SSH access from internet to internal systems. Use fail2ban with custom regex to block IPs after 3 failed root logins: filter = [Definition]\\nfailregex = ^.*login attempt \\[root/.*\\] failed.*$",
+    "policy_updates": "Update incident response policy to mandate immediate SSH hardening (PermitRootLogin no, PasswordAuthentication no) upon any root login success. Require all honeypots to log and alert on direct-tcpip requests. Mandate quarterly review of default account usage and password policies across all systems."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "labels": [
+          "User Account"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficFiltering": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficFiltering",
+        "labels": [
+          "Network Traffic Filtering"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#LocalUserAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#LocalUserAccount",
+        "labels": [
+          "Local User Account"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CloudUserAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CloudUserAccount",
+        "labels": [
+          "Cloud User Account"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#PrivilegedUserAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#PrivilegedUserAccount",
+        "labels": [
+          "Privileged User Account"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DefaultUserAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DefaultUserAccount",
+        "labels": [
+          "Default User Account"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ServiceAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ServiceAccount",
+        "labels": [
+          "Service Account"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainUserAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainUserAccount",
+        "labels": [
+          "Domain User Account"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer",
+        "labels": [
+          "Digital Information Bearer"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1136": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1136",
+        "labels": [
+          "Create Account"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CWE-1393": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CWE-1393",
+        "labels": [
+          "Use of Default Password"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#User": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "labels": [
+          "User"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AuthenticateUser": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AuthenticateUser",
+        "labels": [
+          "Authenticate User"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#LogonUser": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#LogonUser",
+        "labels": [
+          "Logon User"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Credential": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Credential",
+        "labels": [
+          "Credential"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AuthenticationFunction": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AuthenticationFunction",
+        "labels": [
+          "Authentication Function"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DS0002": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DS0002",
+        "labels": [
+          "User Account (ATT&CK DS)"
+        ],
+        "comments": [
+          "The digital artifact mapping for this data source is only applicable to the User Account Metadata component"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccountPermissions": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccountPermissions",
+        "labels": [
+          "User Account Permissions"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1531": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1531",
+        "labels": [
+          "Account Access Removal"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1098": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1098",
+        "labels": [
+          "Account Manipulation"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AgentAuthentication": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AgentAuthentication",
+        "labels": [
+          "Agent Authentication"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ChangeDefaultPassword": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ChangeDefaultPassword",
+        "labels": [
+          "Change Default Password"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessModeling": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessModeling",
+        "labels": [
+          "Access Modeling"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1078": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1078",
+        "labels": [
+          "Valid Accounts"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalIdentity": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalIdentity",
+        "labels": [
+          "Digital Identity"
+        ],
+        "comments": [
+          "Variously describes or designates.  Designation is not compete or definite without context.  The representation generally can be identified by a unique identifier, though this may be private information."
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Agent": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Agent",
+        "labels": [
+          "Agent"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AccountLocking": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccountLocking",
+        "labels": [
+          "Account Locking"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ImpersonateUser": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ImpersonateUser",
+        "labels": [
+          "Impersonate User"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#UnlockAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#UnlockAccount",
+        "labels": [
+          "Unlock Account"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#RestoreUserAccountAccess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#RestoreUserAccountAccess",
+        "labels": [
+          "Restore User Account Access"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#UserToUserMessage": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserToUserMessage",
+        "labels": [
+          "User to User Message"
+        ],
+        "comments": [],
+        "depth": 1
+      }
+    },
+    "relationships": [
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#LocalUserAccount",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#CloudUserAccount",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#PrivilegedUserAccount",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DefaultUserAccount",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ServiceAccount",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainUserAccount",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1136",
+        "type": "ns0__creates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#CWE-1393",
+        "type": "ns0__weakness-of"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "type": "rdfs__seeAlso"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#AuthenticateUser",
+        "type": "ns0__authenticates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#LogonUser",
+        "type": "ns0__authenticates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Credential",
+        "type": "ns0__authenticates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#AuthenticationFunction",
+        "type": "ns0__authenticates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DS0002",
+        "type": "ns0__exactly"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccountPermissions",
+        "type": "ns0__restricts"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1531",
+        "type": "ns0__modifies"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1098",
+        "type": "ns0__modifies"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#AgentAuthentication",
+        "type": "ns0__strengthens"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ChangeDefaultPassword",
+        "type": "ns0__strengthens"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessModeling",
+        "type": "ns0__maps"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1078",
+        "type": "ns0__uses"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalIdentity",
+        "type": "ns0__identified-by"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Agent",
+        "type": "ns0__used-by"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccountLocking",
+        "type": "ns0__disables"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ImpersonateUser",
+        "type": "ns0__forges"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UnlockAccount",
+        "type": "ns0__restores"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#RestoreUserAccountAccess",
+        "type": "ns0__restores"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserToUserMessage",
+        "type": "ns0__has-sender"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "type": "ns0__has-account"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserToUserMessage",
+        "type": "ns0__has-recipient"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "type": "ns0__process-user"
+      }
+    ]
+  }
+}

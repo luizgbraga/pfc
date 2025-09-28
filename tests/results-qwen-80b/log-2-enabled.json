@@ -1,0 +1,217 @@
+{
+  "context_from_subgraph": "The subgraph defines core DEFEND ontology relationships: User accounts (UserAccount) are associated with Users via 'has-account' and 'seeAlso'; Users are restricted by AccessControlList and can spoof DecoyPersona. NetworkTraffic, Process, and FileSystem are foundational artifacts. The incident involves credential access (UserAccount compromise) leading to process execution and filesystem manipulation across multiple architectures, aligning with DEFEND's threat modeling for IoT botnet preparation.",
+  "incident_summary": {
+    "overview": "An attacker successfully brute-forced root credentials on an IoT honeypot, then executed reconnaissance to identify writable tmpfs directories and verify availability of busybox utilities (wget, ftpget) across multiple CPU architectures. This is a preparatory phase for deploying a multi-architecture botnet payload, likely to be delivered via HTTP or FTP.",
+    "technical_classification": "Credential Access Technique -> Reconnaissance -> Multi-Architecture Botnet Preparation",
+    "severity_assessment": "Critical - The attacker has confirmed root access, identified multiple writable temporary directories (tmpfs), and validated cross-platform binary utilities (busybox wget/ftpget), indicating active preparation for widespread IoT botnet deployment. This is not a single-device compromise but a scalable infrastructure probe.",
+    "potential_impact": "Full compromise of vulnerable IoT devices across MIPS, ARM, x86, SPARC, and NIOS architectures. Potential for DDoS, crypto-mining, or lateral movement within enterprise networks. Data exfiltration and persistence via hidden files in /tmp, /dev/shm, or other tmpfs mounts. Risk of network-wide propagation if similar devices lack credential hardening."
+  },
+  "investigation_steps": {
+    "triage_steps": "Immediately isolate the sensor (3df7683019db) from the network. Correlate all events from src_ip 220.133.208.191. Extract all cowrie logs for this session and cross-reference with system process and file creation timestamps. Check for any active connections or spawned processes from the compromised session.",
+    "evidence_collection": [
+      {
+        "description": "Extract full cowrie logs for the session a40eb74c3cc3 and all other sessions from src_ip 220.133.208.191",
+        "command": "grep -A 50 -B 5 '220.133.208.191' /var/log/cowrie/cowrie.log.* > /evidence/cowrie_incident_220.133.208.191."
+      },
+      {
+        "description": "Capture memory dump of the honeypot system for volatile artifact analysis",
+        "command": "dd if=/dev/mem of=/evidence/memdump.raw bs=1M count=2048 --noerror"
+      },
+      {
+        "description": "Dump all file system metadata for /tmp, /dev/shm, and /usr directories as of incident timestamp",
+        "command": "find /tmp /dev/shm /usr -type f -printf \"%p\\t%Y\\t%u\\t%g\\n\" 2>/dev/null > /evidence/filesystem_audit_$(date +%Y%m%d_%H%M%S).txt"
+      },
+      {
+        "description": "Export network connection state and listening ports at time of incident",
+        "command": "netstat -tulnp > /evidence/netstat_pre_isolation.txt"
+      }
+    ],
+    "technical_analysis": "Analyze the sequence: 1) Successful root login with weak password; 2) Creation of zero-byte files (.a) in /usr, /tmp, /dev/shm, and all non-noexec tmpfs mounts \u2014 indicative of payload staging areas; 3) Verification of busybox utilities (wget, ftpget) and decoding of hex string '\\x67\\x61\\x79\\x66\\x67\\x74' (which decodes to 'gayfgt', likely a placeholder or test string); 4) Multiple architecture probes (linux-sparc64-msb, linux-mips-lsb, linux-nios-msb, etc.) confirm intent to build a multi-architecture botnet. The attacker is mapping attack surface for payload delivery.",
+    "tools_and_commands": [
+      {
+        "tool": "grep",
+        "usage": "Filter logs by IP, session, or command pattern",
+        "example": "grep '220.133.208.191' /var/log/cowrie/cowrie.log | grep 'command.input'"
+      },
+      {
+        "tool": "hexdump",
+        "usage": "Decode hex-encoded strings from logs",
+        "example": "echo -e '\\x67\\x61\\x79\\x66\\x67\\x74' | hexdump -C"
+      },
+      {
+        "tool": "volatility",
+        "usage": "Analyze memory dump for hidden processes or injected code",
+        "example": "volatility -f /evidence/memdump.raw --profile=LinuxUbuntu_5_4_0-91-generic linux_pslist"
+      },
+      {
+        "tool": "strings",
+        "usage": "Extract readable strings from binary artifacts or memory dumps",
+        "example": "strings /evidence/memdump.raw | grep -E 'http|ftp|wget|ftpget'"
+      },
+      {
+        "tool": "awk",
+        "usage": "Parse /proc/mounts to identify writable tmpfs mounts",
+        "example": "awk '/tmpfs/ && !/noexec/ {print $2}' /proc/mounts"
+      }
+    ],
+    "indicators_of_compromise": [
+      "src_ip: 220.133.208.191",
+      "username: root with password: 1.oN%cpi",
+      "file paths: /usr/.a, /tmp/.a, /dev/shm/.a",
+      "command pattern: >/path/.a && cd /path; rm -rf .a",
+      "busybox wget/ftpget usage in non-standard environments",
+      "multiple architecture probes: linux-sparc64-msb, linux-mips-lsb, linux-nios-msb, linux-mips64-msb, linux-x86-lsb, bsd-aarch64-msb",
+      "hex string '\\x67\\x61\\x79\\x66\\x67\\x74' in command input"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Immediately disconnect the sensor (3df7683019db) from all networks. Disable SSH access on the host. Block outbound traffic from the sensor using iptables. Quarantine the host in an air-gapped forensic environment.",
+    "system_isolation": "iptables -A OUTPUT -d 220.133.208.191 -j DROP\niptables -A INPUT -s 220.133.208.191 -j DROP\nsystemctl stop cowrie\nsystemctl disable cowrie",
+    "malicious_activity_blocking": "Block IP 220.133.208.191 at firewall and DNS level:\nfirewall-cmd --add-rich-rule='rule family=\"ipv4\" source address=\"220.133.208.191\" reject' --permanent\nfirewall-cmd --reload\nAdd 220.133.208.191 to /etc/hosts.deny: ALL: 220.133.208.191\nUpdate SIEM correlation rules to flag any login attempts with password '1.oN%cpi'",
+    "evidence_preservation": "Create a bit-for-bit forensic image of the entire filesystem:\ndd if=/dev/sda of=/evidence/forensic_image.img bs=4M conv=noerror,sync\nGenerate SHA256 hash: sha256sum /evidence/forensic_image.img > /evidence/forensic_image.img.sha256\nPreserve all logs, memory dump, and file system audit files in write-once storage."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remove all zero-byte .a files from known staging locations:\nfind /tmp /dev/shm /usr -name \".a\" -delete\nVerify no other hidden files exist: find /tmp /dev/shm /usr -type f -name \".*\" -not -name \"..\" -ls\nScan for known botnet binaries using YARA:\nwget https://raw.githubusercontent.com/Yara-Rules/rules/master/malware/MalwareBazaar.yar -O /tmp/botnet.yar\nyara -r /tmp/botnet.yar /tmp /dev/shm /usr",
+    "vulnerability_fix": "Disable root SSH login: sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config\nEnforce strong password policy: echo \"password requisite pam_pwquality.so retry=3 minlen=12 difok=4\" >> /etc/pam.d/common-password\nRestart SSH: systemctl restart sshd\nPatch all IoT device firmware to remove default credentials and disable telnet/SSH if unused.",
+    "lateral_movement_check": "Check for any outbound connections from other internal IoT devices to 220.133.208.191:\njournalctl -u sshd | grep \"Accepted\" | grep -v \"127.0.0.1\" | awk '{print $10}' | sort | uniq -c\nCheck for cron jobs or systemd services created around incident time:\nfind /etc/cron* /etc/systemd/system -type f -newermt \"2025-03-03 04:00\" -not -newermt \"2025-03-03 05:00\" -ls\nAudit all user accounts for unexpected additions: cat /etc/passwd | cut -d: -f1"
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restore the honeypot from a clean, signed, and verified image taken before the incident. Do not restore from snapshots taken after March 3, 2025 04:00 UTC. Rebuild the system from immutable base image with hardened configuration.",
+    "integrity_validation": "Verify integrity of restored system using SHA256 checksums of critical binaries:\nfor bin in /bin/busybox /usr/bin/wget /usr/bin/ftpget /usr/sbin/sshd; do sha256sum $bin; done > /verification/binaries.sha256\nCompare against known-good baseline from vendor or build server.\nRun chkrootkit: chkrootkit -q\nRun rkhunter --check --sk",
+    "return_to_operations": "Return system to production only after: 1) All forensic evidence is preserved; 2) System integrity is validated via checksums and rootkit scans; 3) Network traffic to/from 220.133.208.191 is permanently blocked; 4) SIEM alerts are confirmed to trigger on the same IOCs. Monitor for 72 hours with EDR before re-enabling external access."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Deploy YARA rules to detect .a files in /tmp, /dev/shm, or /usr: rule IoT_Botnet_Staging { strings: $file_pattern = \".a\" condition: any of them and (file in [\"/tmp\", \"/dev/shm\", \"/usr\"]) }\nConfigure EDR to alert on: 1) root login from non-whitelisted IPs; 2) use of busybox wget/ftpget in non-embedded environments; 3) multiple architecture probes within 10 seconds.\nEnable fail2ban with custom filter for cowrie.login.success with weak passwords.",
+    "security_improvements": "Implement network segmentation: isolate IoT sensors in a dedicated VLAN with egress filtering. Disable all unused services on IoT devices. Enforce MFA for all administrative access. Deploy honeypots with decoy personas (DEFEND: DecoyPersona) to mislead attackers and log reconnaissance patterns.",
+    "policy_updates": "Update incident response policy to mandate: 1) Immediate isolation of any device with root login from non-internal IPs; 2) Automated scanning of tmpfs directories for hidden files upon any credential compromise; 3) Mandatory password rotation for all default accounts in IoT fleet every 30 days. Add this attack pattern to the threat intelligence feed and require quarterly red team exercises simulating multi-architecture botnet prep."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#User": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "labels": [
+          "User"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#UserGroup": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserGroup",
+        "labels": [
+          "User Group"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "labels": [
+          "User Account"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessControlList": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessControlList",
+        "labels": [
+          "Access Control List"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer",
+        "labels": [
+          "Digital Information Bearer"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Agent": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Agent",
+        "labels": [
+          "Agent"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DecoyPersona": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DecoyPersona",
+        "labels": [
+          "Decoy Persona"
+        ],
+        "comments": [],
+        "depth": 1
+      }
+    },
+    "relationships": [
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserGroup",
+        "type": "ns0__contains"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "type": "rdfs__seeAlso"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "type": "ns0__has-account"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessControlList",
+        "type": "ns0__restricted-by"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Agent",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DecoyPersona",
+        "type": "ns0__spoofs"
+      }
+    ]
+  }
+}

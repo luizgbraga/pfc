@@ -1,0 +1,586 @@
+{
+  "context_from_subgraph": "O subgrafo forneceu informa\u00e7\u00f5es sobre processos, incluindo tipos de processos, an\u00e1lise de processos e relacionamentos entre processos e outros conceitos de seguran\u00e7a.",
+  "incident_summary": {
+    "overview": "O incidente envolveu um ataque de tunelamento SSH com encaminhamento de porta para abuso de rel\u00e9 de e-mail.",
+    "technical_classification": "O incidente pode ser classificado como um ataque de tunelamento SSH, que \u00e9 uma t\u00e9cnica usada por atacantes para estabelecer uma conex\u00e3o segura e encaminhar tr\u00e1fego de rede.",
+    "severity_assessment": "A gravidade do incidente \u00e9 alta, pois o atacante conseguiu estabelecer uma conex\u00e3o SSH e realizar atividades maliciosas.",
+    "potential_impact": "O impacto potencial do incidente inclui a possibilidade de o atacante acessar e manipular dados sens\u00edveis, al\u00e9m de usar a infraestrutura da organiza\u00e7\u00e3o para realizar atividades maliciosas."
+  },
+  "investigation_steps": {
+    "triage_steps": "As etapas de triagem incluem a an\u00e1lise dos logs de seguran\u00e7a para identificar a origem e o destino do tr\u00e1fego de rede, al\u00e9m de verificar se houve alguma atividade suspeita nos sistemas afetados.",
+    "evidence_collection": [
+      {
+        "description": "Coletar logs de seguran\u00e7a",
+        "command": "grep 'cowrie' /var/log/auth.log"
+      },
+      {
+        "description": "Coletar informa\u00e7\u00f5es de rede",
+        "command": "tcpdump -i eth0 -n -s 0 -w capture.pcap"
+      }
+    ],
+    "technical_analysis": "A an\u00e1lise t\u00e9cnica inclui a verifica\u00e7\u00e3o de padr\u00f5es de tr\u00e1fego de rede e a identifica\u00e7\u00e3o de poss\u00edveis vetores de ataque.",
+    "tools_and_commands": [
+      {
+        "tool": "tcpdump",
+        "usage": "Capturar tr\u00e1fego de rede",
+        "example": "tcpdump -i eth0 -n -s 0 -w capture.pcap"
+      },
+      {
+        "tool": "grep",
+        "usage": "Buscar padr\u00f5es em logs de seguran\u00e7a",
+        "example": "grep 'cowrie' /var/log/auth.log"
+      }
+    ],
+    "indicators_of_compromise": [
+      "Conex\u00f5es SSH suspeitas",
+      "Tr\u00e1fego de rede anormal",
+      "Logs de seguran\u00e7a alterados"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Desconectar o sistema afetado da rede e bloquear o tr\u00e1fego de rede suspeito.",
+    "system_isolation": "Isolar o sistema afetado para evitar a propaga\u00e7\u00e3o do ataque.",
+    "malicious_activity_blocking": "Bloquear atividades maliciosas, como conex\u00f5es SSH suspeitas.",
+    "evidence_preservation": "Preservar evid\u00eancias, como logs de seguran\u00e7a e capturas de tr\u00e1fego de rede."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover a amea\u00e7a, incluindo a exclus\u00e3o de malware e a corre\u00e7\u00e3o de vulnerabilidades.",
+    "vulnerability_fix": "Corrigir vulnerabilidades para evitar a reinfec\u00e7\u00e3o.",
+    "lateral_movement_check": "Verificar se houve movimento lateral e tomar medidas para evitar a propaga\u00e7\u00e3o do ataque."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar o sistema afetado para um estado conhecido e seguro.",
+    "integrity_validation": "Validar a integridade do sistema e dos dados.",
+    "return_to_operations": "Retornar \u00e0s opera\u00e7\u00f5es normais ap\u00f3s a confirma\u00e7\u00e3o de que o sistema est\u00e1 seguro."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar medidas preventivas, como a autentica\u00e7\u00e3o de dois fatores e a monitora\u00e7\u00e3o de tr\u00e1fego de rede.",
+    "security_improvements": "Melhorar a seguran\u00e7a do sistema, incluindo a atualiza\u00e7\u00e3o de software e a corre\u00e7\u00e3o de vulnerabilidades.",
+    "policy_updates": "Atualizar pol\u00edticas e procedimentos de seguran\u00e7a para evitar incidentes semelhantes no futuro."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ChildProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ChildProcess",
+        "labels": [
+          "Child Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#UserProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserProcess",
+        "labels": [
+          "User Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OTControlLogicProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OTControlLogicProcess",
+        "labels": [
+          "OT Control Logic Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OperatingSystemProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OperatingSystemProcess",
+        "labels": [
+          "Operating System Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ParentProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ParentProcess",
+        "labels": [
+          "Parent Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer",
+        "labels": [
+          "Digital Information Bearer"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessSpawnAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessSpawnAnalysis",
+        "labels": [
+          "Process Spawn Analysis"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessLineageAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessLineageAnalysis",
+        "labels": [
+          "Process Lineage Analysis"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessSelf-ModificationDetection": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessSelf-ModificationDetection",
+        "labels": [
+          "Process Self-Modification Detection"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#process-security-context": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#process-security-context",
+        "labels": [
+          "process-security-context"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessTree": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessTree",
+        "labels": [
+          "Process Tree"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessImage": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessImage",
+        "labels": [
+          "Process Image"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#GetRunningProcesses": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#GetRunningProcesses",
+        "labels": [
+          "Get Running Processes"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DS0009": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DS0009",
+        "labels": [
+          "Process (ATT&CK DS)"
+        ],
+        "comments": [
+          "The digital artifact mapping for this data source is only applicable to the Process Metadata component"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1505.003": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1505.003",
+        "labels": [
+          "Web Shell"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1546.007": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1546.007",
+        "labels": [
+          "Netsh Helper DLL"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#TraceProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#TraceProcess",
+        "labels": [
+          "Trace Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#HostShutdown": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#HostShutdown",
+        "labels": [
+          "Host Shutdown"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#TerminateProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#TerminateProcess",
+        "labels": [
+          "Terminate Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessTermination": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessTermination",
+        "labels": [
+          "Process Termination"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#HostReboot": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#HostReboot",
+        "labels": [
+          "Host Reboot"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Resource": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Resource",
+        "labels": [
+          "Resource"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessProcess",
+        "labels": [
+          "Access Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.001": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.001",
+        "labels": [
+          "LSASS Memory"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CreateProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CreateProcess",
+        "labels": [
+          "Create Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Application-basedProcessIsolation": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Application-basedProcessIsolation",
+        "labels": [
+          "Application-based Process Isolation"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemCallFiltering": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemCallFiltering",
+        "labels": [
+          "System Call Filtering"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Hardware-basedProcessIsolation": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Hardware-basedProcessIsolation",
+        "labels": [
+          "Hardware-based Process Isolation"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Kernel-basedProcessIsolation": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Kernel-basedProcessIsolation",
+        "labels": [
+          "Kernel-based Process Isolation"
+        ],
+        "comments": [
+          "e.g. KVM"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.004": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.004",
+        "labels": [
+          "LSA Secrets"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.002": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.002",
+        "labels": [
+          "Security Account Manager"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#SuspendProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#SuspendProcess",
+        "labels": [
+          "Suspend Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessSuspension": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessSuspension",
+        "labels": [
+          "Process Suspension"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ExecutableBinary": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ExecutableBinary",
+        "labels": [
+          "Executable Binary"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ResumeProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ResumeProcess",
+        "labels": [
+          "Resume Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Software": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Software",
+        "labels": [
+          "Software"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Thread": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Thread",
+        "labels": [
+          "Thread"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "labels": [
+          "User Account"
+        ],
+        "comments": [],
+        "depth": 1
+      }
+    },
+    "relationships": [
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ChildProcess",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserProcess",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#OTControlLogicProcess",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#OperatingSystemProcess",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ParentProcess",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessSpawnAnalysis",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessLineageAnalysis",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessSelf-ModificationDetection",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#process-security-context",
+        "type": "rdfs__domain"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessTree",
+        "type": "ns0__contains"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessImage",
+        "type": "ns0__contains"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#GetRunningProcesses",
+        "type": "ns0__enumerates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DS0009",
+        "type": "ns0__exactly"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1505.003",
+        "type": "ns0__produces"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1546.007",
+        "type": "ns0__produces"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#TraceProcess",
+        "type": "ns0__monitors"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#HostShutdown",
+        "type": "ns0__terminates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#TerminateProcess",
+        "type": "ns0__terminates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessTermination",
+        "type": "ns0__terminates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#HostReboot",
+        "type": "ns0__terminates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Resource",
+        "type": "ns0__uses"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessProcess",
+        "type": "ns0__accesses"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.001",
+        "type": "ns0__accesses"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#CreateProcess",
+        "type": "ns0__executes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Application-basedProcessIsolation",
+        "type": "ns0__isolates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemCallFiltering",
+        "type": "ns0__isolates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Hardware-basedProcessIsolation",
+        "type": "ns0__isolates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Kernel-basedProcessIsolation",
+        "type": "ns0__isolates"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.004",
+        "type": "ns0__may-access"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.002",
+        "type": "ns0__may-access"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#SuspendProcess",
+        "type": "ns0__suspends"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessSuspension",
+        "type": "ns0__suspends"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ExecutableBinary",
+        "type": "ns0__process-image-path"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ResumeProcess",
+        "type": "ns0__resumes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Software",
+        "type": "ns0__instructs"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Thread",
+        "type": "ns0__may-execute"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserAccount",
+        "type": "ns0__process-user"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Software",
+        "type": "ns0__instructed-by"
+      }
+    ]
+  }
+}

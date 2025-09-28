@@ -1,0 +1,106 @@
+{
+  "context_from_subgraph": "",
+  "incident_summary": {
+    "overview": "Um incidente de seguran\u00e7a foi detectado onde um arquivo malicioso foi executado em servidores Windows, resultando em atividades suspeitas de explora\u00e7\u00e3o de vulnerabilidades.",
+    "technical_classification": "Explora\u00e7\u00e3o de Vulnerabilidade",
+    "severity_assessment": "Alta - A explora\u00e7\u00e3o de vulnerabilidades pode levar a perda de dados sens\u00edveis e comprometimento de sistemas cr\u00edticos.",
+    "potential_impact": "Impacto significativo nos sistemas afetados, incluindo perda de dados, comprometimento de credenciais e potencialmente, acesso n\u00e3o autorizado a sistemas internos."
+  },
+  "investigation_steps": {
+    "triage_steps": "Executar comandos b\u00e1sicos para identificar atividades suspeitas e iniciar a coleta de evid\u00eancias.",
+    "evidence_collection": [
+      {
+        "description": "Coletar logs de eventos do sistema para identificar atividades suspeitas.",
+        "command": "wevtutil qe Security /rd:true /c:1000 /f:text > security_logs.txt"
+      },
+      {
+        "description": "Examinar processos em execu\u00e7\u00e3o para identificar processos suspeitos.",
+        "command": "tasklist /FI \"STATUS eq running\""
+      }
+    ],
+    "technical_analysis": "Analisar os logs coletados e os processos em execu\u00e7\u00e3o para identificar atividades suspeitas e indicadores de comprometimento.",
+    "tools_and_commands": [
+      {
+        "tool": "Volatility",
+        "usage": "Para an\u00e1lise de mem\u00f3ria de sistema.",
+        "example": "vol.py --profile=Win7SP1x64 image.dmp pslist"
+      },
+      {
+        "tool": "YARA",
+        "usage": "Para identificar padr\u00f5es de malware em arquivos.",
+        "example": "yara -r rules.yar suspicious_file.exe"
+      }
+    ],
+    "indicators_of_compromise": [
+      "Processos desconhecidos em execu\u00e7\u00e3o",
+      "Conex\u00f5es de rede para IPs desconhecidos",
+      "Altera\u00e7\u00f5es recentes em arquivos importantes"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Desconectar os sistemas afetados da rede e isolar os servidores para evitar a propaga\u00e7\u00e3o da amea\u00e7a.",
+    "system_isolation": "Isolar os servidores afetados atrav\u00e9s do firewall.",
+    "malicious_activity_blocking": "Bloquear IPs e dom\u00ednios suspeitos usando firewalls e listas de bloqueio.",
+    "evidence_preservation": "Preservar todas as evid\u00eancias antes de realizar quaisquer altera\u00e7\u00f5es nos sistemas afetados."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover o arquivo malicioso e os processos associados.",
+    "vulnerability_fix": "Aplicar patches de seguran\u00e7a para as vulnerabilidades exploradas.",
+    "lateral_movement_check": "Verificar se h\u00e1 movimenta\u00e7\u00e3o lateral atrav\u00e9s de auditoria de logs e an\u00e1lise de rede."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar os sistemas afetados a partir de backups recentes.",
+    "integrity_validation": "Verificar a integridade dos sistemas restaurados usando ferramentas de verifica\u00e7\u00e3o de hash.",
+    "return_to_operations": "Retornar aos opera\u00e7\u00f5es normais ap\u00f3s a confirma\u00e7\u00e3o da remo\u00e7\u00e3o completa da amea\u00e7a e a valida\u00e7\u00e3o da integridade dos sistemas."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar detec\u00e7\u00e3o proativa de amea\u00e7as atrav\u00e9s de regras SIEM e EDR.",
+    "security_improvements": "Melhorar a seguran\u00e7a dos sistemas atrav\u00e9s de hardening e atualiza\u00e7\u00f5es regulares.",
+    "policy_updates": "Atualizar as pol\u00edticas internas para incluir melhores pr\u00e1ticas de seguran\u00e7a."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkNodeInventory": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkNodeInventory",
+        "labels": [
+          "Network Node Inventory"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

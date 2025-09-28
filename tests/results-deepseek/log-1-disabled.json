@@ -1,0 +1,878 @@
+{
+  "context_from_subgraph": "foo",
+  "incident_summary": {
+    "overview": "A cybersecurity incident was detected involving a sophisticated threat actor exploiting a known vulnerability in the organization's legacy system. The attack resulted in unauthorized access to sensitive data and potential lateral movement within the network.",
+    "technical_classification": "Advanced Persistent Threat (APT) - Based on the DEFEND ontology, this classification fits as the threat demonstrates advanced tactics and persistent behavior.",
+    "severity_assessment": "High - The incident poses significant risks to data integrity, operational continuity, and reputational damage due to the nature of the compromised systems and the potential for data exfiltration.",
+    "potential_impact": "The compromise of sensitive data could lead to financial loss, legal penalties, and reputational damage. Additionally, the lateral movement indicates a higher risk of further infections and data loss."
+  },
+  "investigation_steps": {
+    "triage_steps": "Initial steps include verifying the incident scope, collecting logs, and isolating the affected system to prevent further propagation.",
+    "evidence_collection": [
+      {
+        "description": "Collect raw logs from firewalls, intrusion detection systems, and domain controllers.",
+        "command": "sudo tail -f /var/log/firewall.log && sudo grep -i ' suspicious' /var/log/auth.log"
+      },
+      {
+        "description": "Acquire network traffic captures for analysis.",
+        "command": "tcpdump -i eth0 -w /tmp/network_traffic.pcap"
+      }
+    ],
+    "technical_analysis": "Analyze logs for indicators of compromise, such as unusual login attempts, IP addresses, or malicious scripts.",
+    "tools_and_commands": [
+      {
+        "tool": "Volatility",
+        "usage": "Memory analysis for detecting malware remnants.",
+        "example": "sudo volatility.exe -y -f /tmp/memorydump"
+      },
+      {
+        "tool": "Wireshark",
+        "usage": "Network traffic analysis for identifying command and control traffic.",
+        "example": "sudo wireshark -i /tmp/network_traffic.pcap"
+      }
+    ],
+    "indicators_of_compromise": [
+      "IP addresses: 192.168.1.100, 192.168.2.101",
+      "Hashes: MD5: abc123, SHA1: def456",
+      "File paths: /tmp/malicious_script.sh"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Disconnect the compromised system from the network and preserve evidence without altering systems.",
+    "system_isolation": "Use iptables to block all traffic from the system: sudo iptables -A INPUT -s 192.168.1.100 -j DROP",
+    "malicious_activity_blocking": "Block known malicious IPs and domains: sudo ufw block 192.168.1.100",
+    "evidence_preservation": "Copy sensitive data to a secure location: sudo dd if=/tmp/sensitive_data of=/secure/location/saved_data"
+  },
+  "eradication_steps": {
+    "threat_removal": "Remove all malicious files and scripts using tools like ClamAV: sudo clamscan /tmp/malicious_files",
+    "vulnerability_fix": "Patch the legacy system to address the exploited vulnerability: sudo apt-get update && sudo apt-get upgrade",
+    "lateral_movement_check": "Run chkrootkit to check for lateral movement: sudo chkrootkit -t /tmp"
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restore the system from a known good backup: sudo rsync -avz /backups/ /restored_system",
+    "integrity_validation": "Verify system integrity using checksums: sha256sum /etc/passwd",
+    "return_to_operations": "Re-enable services only after confirming the system is secure: sudo systemctl enable --now sshd"
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implement EDR solutions for real-time threat detection and SIEM integration.",
+    "security_improvements": "Perform regular penetration testing and harden legacy systems.",
+    "policy_updates": "Update incident response procedures to include automated playbooks and monitoring."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsRegistryKey": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsRegistryKey",
+        "labels": [
+          "Windows Registry Key"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ScheduledJob": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ScheduledJob",
+        "labels": [
+          "Scheduled Job"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DNSTrafficAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DNSTrafficAnalysis",
+        "labels": [
+          "DNS Traffic Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Kernel": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Kernel",
+        "labels": [
+          "Kernel"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OperatingSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OperatingSystem",
+        "labels": [
+          "Operating System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#User": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "labels": [
+          "User"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AssetVulnerabilityEnumeration": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AssetVulnerabilityEnumeration",
+        "labels": [
+          "Asset Vulnerability Enumeration"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkNodeInventory": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkNodeInventory",
+        "labels": [
+          "Network Node Inventory"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficFiltering": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficFiltering",
+        "labels": [
+          "Network Traffic Filtering"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#InboundTrafficFiltering": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#InboundTrafficFiltering",
+        "labels": [
+          "Inbound Traffic Filtering"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OTController": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OTController",
+        "labels": [
+          "OT Controller"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OTSensor": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OTSensor",
+        "labels": [
+          "OT Sensor"
+        ],
+        "comments": [
+          "Components of the sensor include a sensing element and may include a power source, display, housing, communication interface or signal processor."
+        ],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OrganizationMapping": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OrganizationMapping",
+        "labels": [
+          "Organization Mapping"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#BlockDevice": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#BlockDevice",
+        "labels": [
+          "Block Device"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1488": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1488",
+        "labels": [
+          "Disk Content Wipe"
+        ],
+        "comments": [
+          "This technique has been revoked by T1561.001"
+        ],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1561.001": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1561.001",
+        "labels": [
+          "Disk Content Wipe"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#MemoryManagementUnit": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#MemoryManagementUnit",
+        "labels": [
+          "Memory Management Unit"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CentralProcessingUnit": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CentralProcessingUnit",
+        "labels": [
+          "Central Processing Unit"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1063": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1063",
+        "labels": [
+          "Security Software Discovery"
+        ],
+        "comments": [
+          "This technique has been revoked by T1518.001"
+        ],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1518.001": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1518.001",
+        "labels": [
+          "Security Software Discovery"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemCallAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemCallAnalysis",
+        "labels": [
+          "System Call Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsCreateFileA": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsCreateFileA",
+        "labels": [
+          "Windows CreateFileA"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsCreateThread": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsCreateThread",
+        "labels": [
+          "Windows CreateThread"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsReadFile": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsReadFile",
+        "labels": [
+          "Windows ReadFile"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsVirtualAllocEx": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsVirtualAllocEx",
+        "labels": [
+          "Windows VirtualAllocEx"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsVirtualProtectEx": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsVirtualProtectEx",
+        "labels": [
+          "Windows VirtualProtectEx"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsWriteFile": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsWriteFile",
+        "labels": [
+          "Windows WriteFile"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsWriteProcessMemory": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsWriteProcessMemory",
+        "labels": [
+          "Windows WriteProcessMemory"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessMediation": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessMediation",
+        "labels": [
+          "Access Mediation"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CreateProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CreateProcess",
+        "labels": [
+          "Create Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1212": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1212",
+        "labels": [
+          "Exploitation for Credential Access"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1210": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1210",
+        "labels": [
+          "Exploitation of Remote Services"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1154": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1154",
+        "labels": [
+          "Trap"
+        ],
+        "comments": [
+          "This technique has been revoked by T1546.005"
+        ],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1546.005": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1546.005",
+        "labels": [
+          "Trap"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1053": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1053",
+        "labels": [
+          "Scheduled Task/Job"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#JobSchedulerSoftware": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#JobSchedulerSoftware",
+        "labels": [
+          "Job Scheduler Software"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.002": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003.002",
+        "labels": [
+          "Security Account Manager"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#SessionDurationAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#SessionDurationAnalysis",
+        "labels": [
+          "Session Duration Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WebSessionActivityAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WebSessionActivityAnalysis",
+        "labels": [
+          "Web Session Activity Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1100": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1100",
+        "labels": [
+          "Web Shell"
+        ],
+        "comments": [
+          "This technique has been revoked by T1505.003"
+        ],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1505.003": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1505.003",
+        "labels": [
+          "Web Shell"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsRegistryValue": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsRegistryValue",
+        "labels": [
+          "Windows Registry Value"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessModeling": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AccessModeling",
+        "labels": [
+          "Access Modeling"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ActivePhysicalLinkMapping": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ActivePhysicalLinkMapping",
+        "labels": [
+          "Active Physical Link Mapping"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AdministrativeNetworkActivityAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AdministrativeNetworkActivityAnalysis",
+        "labels": [
+          "Administrative Network Activity Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Authentication": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Authentication",
+        "labels": [
+          "Authentication"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1122": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1122",
+        "labels": [
+          "Component Object Model Hijacking"
+        ],
+        "comments": [
+          "This technique has been revoked by T1546.015"
+        ],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1546.015": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1546.015",
+        "labels": [
+          "Component Object Model Hijacking"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ConfigurationInventory": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ConfigurationInventory",
+        "labels": [
+          "Configuration Inventory"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ContentQuarantine": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ContentQuarantine",
+        "labels": [
+          "Content Quarantine"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialRotation": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialRotation",
+        "labels": [
+          "Credential Rotation"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialScrubbing": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialScrubbing",
+        "labels": [
+          "Credential Scrubbing"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialTransmissionScoping": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialTransmissionScoping",
+        "labels": [
+          "Credential Transmission Scoping"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DataExchangeMapping": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DataExchangeMapping",
+        "labels": [
+          "Data Exchange Mapping"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DataInventory": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DataInventory",
+        "labels": [
+          "Data Inventory"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DecoyArtifact": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DecoyArtifact",
+        "labels": [
+          "Decoy Artifact"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DecoyUserCredential": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DecoyUserCredential",
+        "labels": [
+          "Decoy User Credential"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DefensiveTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DefensiveTechnique",
+        "labels": [
+          "Defensive Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainTrustPolicy": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainTrustPolicy",
+        "labels": [
+          "Domain Trust Policy"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#EmailRemoval": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#EmailRemoval",
+        "labels": [
+          "Email Removal"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#EmulatedFileAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#EmulatedFileAnalysis",
+        "labels": [
+          "Emulated File Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileEncryption": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileEncryption",
+        "labels": [
+          "File Encryption"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileMetadataConsistencyValidation": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileMetadataConsistencyValidation",
+        "labels": [
+          "File Metadata Consistency Validation"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FirmwareVerification": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FirmwareVerification",
+        "labels": [
+          "Firmware Verification"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CWE-94": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CWE-94",
+        "labels": [
+          "Improper Control of Generation of Code ('Code Injection')"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#IntranetIPCNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#IntranetIPCNetworkTraffic",
+        "labels": [
+          "Intranet IPC Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#LocalAccountMonitoring": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#LocalAccountMonitoring",
+        "labels": [
+          "Local Account Monitoring"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#LocalFilePermissions": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#LocalFilePermissions",
+        "labels": [
+          "Local File Permissions"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1218.013": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1218.013",
+        "labels": [
+          "Mavinject"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#MemoryBlock": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#MemoryBlock",
+        "labels": [
+          "Memory Block"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkSession": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkSession",
+        "labels": [
+          "Network Session"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficPolicyMapping": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficPolicyMapping",
+        "labels": [
+          "Network Traffic Policy Mapping"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#One-timePassword": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#One-timePassword",
+        "labels": [
+          "One-time Password"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OutboundInternetDNSLookupTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OutboundInternetDNSLookupTraffic",
+        "labels": [
+          "Outbound Internet DNS Lookup Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#PacketLog": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#PacketLog",
+        "labels": [
+          "Packet Log"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#PageTable": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#PageTable",
+        "labels": [
+          "Page Table"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#PartitionTable": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#PartitionTable",
+        "labels": [
+          "Partition Table"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#PasswordRotation": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#PasswordRotation",
+        "labels": [
+          "Password Rotation"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessTree": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProcessTree",
+        "labels": [
+          "Process Tree"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProtocolMetadataAnomalyDetection": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProtocolMetadataAnomalyDetection",
+        "labels": [
+          "Protocol Metadata Anomaly Detection"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Reference-CatiaUAFPlugin": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Reference-CatiaUAFPlugin",
+        "labels": [
+          "Reference - Catia UAF Plugin"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Reference-MethodForContentDisarmandReconstruction_OPSWATInc": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Reference-MethodForContentDisarmandReconstruction_OPSWATInc",
+        "labels": [
+          "Reference - Method For Content Disarm and Reconstruction - OPSWAT Inc"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Reference-UnifiedArchitectureFrameworkUAF": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Reference-UnifiedArchitectureFrameworkUAF",
+        "labels": [
+          "Reference - Unified Architecture Framework (UAF)"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#RemoteTerminalSessionDetection": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#RemoteTerminalSessionDetection",
+        "labels": [
+          "Remote Terminal Session Detection"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ScheduledJobAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ScheduledJobAnalysis",
+        "labels": [
+          "Scheduled Job Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1584.004": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1584.004",
+        "labels": [
+          "Server"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Server": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Server",
+        "labels": [
+          "Server"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1583.004": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1583.004",
+        "labels": [
+          "Server"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ServiceDependencyMapping": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ServiceDependencyMapping",
+        "labels": [
+          "Service Dependency Mapping"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#SoftwareInventory": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#SoftwareInventory",
+        "labels": [
+          "Software Inventory"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemDaemonMonitoring": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemDaemonMonitoring",
+        "labels": [
+          "System Daemon Monitoring"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemFileAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemFileAnalysis",
+        "labels": [
+          "System File Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemInitConfigAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemInitConfigAnalysis",
+        "labels": [
+          "System Init Config Analysis"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemVulnerabilityAssessment": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#SystemVulnerabilityAssessment",
+        "labels": [
+          "System Vulnerability Assessment"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsCreateProcessA": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WindowsCreateProcessA",
+        "labels": [
+          "Windows CreateProcessA"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#verifies": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#verifies",
+        "labels": [
+          "verifies"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

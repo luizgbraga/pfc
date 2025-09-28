@@ -1,0 +1,74 @@
+{
+  "context_from_subgraph": "foo",
+  "incident_summary": {
+    "overview": "A sophisticated phishing attack targeted the organization's HR department, distributing a malicious email attachment that exploits a known vulnerability in the email filtering system. The attack resulted in the compromise of sensitive employee data, including Social Security Numbers (SSNs) and salary information.",
+    "technical_classification": "PHISHING-EC: Email Client Exploit",
+    "severity_assessment": "High - The attack compromised sensitive employee data and could lead to significant financial and reputational damage if not properly contained and remediated.",
+    "potential_impact": "The compromised data could be used for identity theft, financial fraud, or unauthorized access to company systems. The incident may also undermine user trust in the organization's security measures."
+  },
+  "investigation_steps": {
+    "triage_steps": "Initiate incident response process, collect preliminary evidence, and isolate the compromised system to prevent further propagation.",
+    "evidence_collection": [
+      {
+        "description": "Collect raw logs from email servers and endpoints using `tail -f /var/log/maillog` and `ls /var/log/syslog`.",
+        "command": "sudo tail -f /var/log/maillog | grep -i 'phishing'"
+      },
+      {
+        "description": "Capture network traffic using `tcpdump` and analyze it for suspicious connections.",
+        "command": "sudo tcpdump -i eth0 -w /tmp/email_traffic.pcap"
+      }
+    ],
+    "technical_analysis": "Analyze the collected logs for indicators of compromise, such as unusual email traffic patterns or specific command sequences indicative of phishing activity.",
+    "tools_and_commands": [
+      {
+        "tool": "Volatility",
+        "usage": "Memory analysis to identify malicious processes.",
+        "example": "sudo volatility.exe -y -f /tmp/memorydump"
+      },
+      {
+        "tool": "LogParser",
+        "usage": "Parse and filter logs for specific patterns.",
+        "example": "logparser.exe 'SELECT * FROM * WHERE EventID=1002' -o output.log"
+      }
+    ],
+    "indicators_of_compromise": [
+      "Unusual email headers or content",
+      "Specific command sequences related to phishing attacks",
+      "Network traffic patterns indicative of command and control communication"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Block access to known malicious domains and IPs using firewall rules.",
+    "system_isolation": "Isolate the compromised system from the network using `sudo iptables -A INPUT -s 192.168.1.100 -j DROP`.",
+    "malicious_activity_blocking": "Disable suspicious processes and services temporarily.",
+    "evidence_preservation": "Preserve evidence by copying logs and artifacts before making any changes."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remove the malicious attachment using `sudo clamscan /path/to/attachment` and clean the infected system.",
+    "vulnerability_fix": "Patch the email filtering system to address the exploited vulnerability.",
+    "lateral_movement_check": "Use `sudo chkrootkit` to check for any lateral movement indicators."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restore the system from a known good backup using `sudo rsync -avz /backups/ /restored_dir`.",
+    "integrity_validation": "Verify data integrity using checksums and compare with backups.",
+    "return_to_operations": "Re-enable monitoring and logging, and conduct a thorough post-incident review."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implement email filtering policies and user training to detect phishing attempts.",
+    "security_improvements": "Enhance email filtering capabilities and conduct regular security awareness training.",
+    "policy_updates": "Update incident response procedures to include phishing response plans."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

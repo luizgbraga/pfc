@@ -42,7 +42,7 @@
         .code-block {
             background: #f8f8f8;
             border-radius: 5px;
-            padding: 10px;
+            padding: 2px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
             margin: 6px 0 12px 0;
@@ -68,82 +68,79 @@
 
         <section>
             <div class="section-title">Contexto do Subgrafo</div>
-            <div>The subgraph highlights the Credential Access Technique hierarchy, specifically the Brute Force technique (T1110) and its sub-techniques, as well as related concepts such as SSH, firewall, and user authentication. This context informs the playbook’s focus on SSH brute‑force detection, mitigation, and prevention.</div>
+            <div>The subgraph confirms that CredentialAccessTechnique is a parent class of T1110 (Brute Force) and T1003 (OS Credential Dumping), and that T1110 has subclasses including T1110.001 (Password Guessing), T1110.002 (Password Cracking), T1110.003 (Password Spraying), and T1110.004 (Credential Stuffing). The incident involves a successful Telnet brute force login using default credentials (ubnt/ubnt), followed by execution of malicious commands via busybox, indicating credential access via brute force (T1110) and potential OS credential dumping (T1003) as follow-on activity. The use of /bin/busybox VSEPU is a known signature of Mirai-family malware, which targets IoT devices via default credentials and establishes persistence via /dev/shm.</div>
         </section>
 
         <section>
             <div class="section-title">Resumo do Incidente</div>
             <ul>
-                <li><b>Visão Geral:</b> On 2025-07-10 at 10:30 UTC, the firewall logged 15 failed SSH login attempts from 192.168.1.100 targeting user 'admin' on host 10.0.0.1 within a 5‑minute window, indicating a brute‑force credential‑guessing attack.</li>
-                <li><b>Classificação Técnica:</b> Credential Access – Brute Force (T1110)</li>
-                <li><b>Avaliação de Severidade:</b> High – The attack targets privileged accounts, potentially leading to unauthorized system access and lateral movement.</li>
-                <li><b>Impacto Potencial:</b> Compromise of the admin account could allow full system control, data exfiltration, persistence, and further attacks across the network.</li>
+                <li><b>Visão Geral:</b> An attacker successfully brute-forced a Telnet service on device 172.29.0.2 using the default credentials 'ubnt/ubnt', gained shell access, and executed a series of commands to download and execute a Mirai-family malware binary ('VSEPU') via busybox. The attack originated from IP 177.75.222.254 and lasted under 3 seconds. The attacker attempted multiple credential combinations before success, then executed commands to identify the system architecture, create a persistence file in /dev/shm, and download additional payloads via tftp/wget.</li>
+                <li><b>Classificação Técnica:</b> T1110.001 - Password Guessing (Brute Force) leading to T1003 - OS Credential Dumping and T1204 - User Execution (Malware via busybox)</li>
+                <li><b>Avaliação de Severidade:</b> Critical - The attacker achieved full system compromise on an exposed IoT device with default credentials, executed arbitrary code, and likely deployed a botnet agent (Mirai variant). The system is now a confirmed botnet node capable of participating in DDoS attacks, lateral movement, or further credential harvesting. No authentication or network segmentation prevented access.</li>
+                <li><b>Impacto Potencial:</b> Full compromise of the affected device (172.29.0.2) with potential for lateral movement to other IoT devices on the same network. The device may be used for DDoS attacks, scanning for other vulnerable devices, or as a proxy for further attacks. Sensitive data on the device (if any) is exposed. Network performance may degrade due to outbound C2 traffic. Repeated attacks indicate the system remains exposed.</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Etapas de Investigação</div>
             <div class="subsection-title">Etapas de Triagem</div>
-            <div>1. Verify the alert source and timestamp.
-2. Confirm the affected host and port.
-3. Check for additional anomalous authentication events.
-4. Correlate with other logs (system, application, network).</div>
+            <div>Immediately isolate the affected host (172.29.0.2) from the network. Correlate the Telnet login success (cowrie.login.success) with subsequent command inputs. Verify if the source IP (177.75.222.254) has attacked other systems by querying logs for repeated connections to other devices on port 23. Check for other successful logins from this IP across the environment.</div>
 
             <div class="subsection-title">Coleta de Evidências</div>
             <table>
                 <tr><th>Descrição</th><th>Comando</th></tr>
-                <tr><td>Collect recent authentication logs from the SSH daemon.</td><td><span class="code-block">grep -i "Failed password" /var/log/auth.log | tail -n 200 > /tmp/auth_failures.log</span></td></tr><tr><td>Capture current SSH configuration for audit.</td><td><span class="code-block">cat /etc/ssh/sshd_config > /tmp/sshd_config_backup</span></td></tr><tr><td>Snapshot the shadow file to verify credential integrity.</td><td><span class="code-block">cp /etc/shadow /tmp/shadow_snapshot</span></td></tr><tr><td>Export firewall rules for forensic preservation.</td><td><span class="code-block">iptables-save > /tmp/iptables_rules.bak</span></td></tr>
+                <tr><td>Extract all Cowrie logs for session d3dbb59041fb and correlate with system logs from the affected host.</td><td><span class="code-block">grep 'd3dbb59041fb' /var/log/cowrie/cowrie.* > /evidence/session_d3dbb59041fb.log</span></td></tr><tr><td>Capture memory dump of the compromised host for analysis of running processes and injected code.</td><td><span class="code-block">volatility -f /evidence/ramdump.raw --profile=LinuxUbuntu_5_4_0-100-generic linux_pslist</span></td></tr><tr><td>Dump the contents of /dev/shm and check for .s file or busybox binary.</td><td><span class="code-block">cp -r /dev/shm /evidence/dev_shm_forensic/ && ls -la /evidence/dev_shm_forensic/.s</span></td></tr><tr><td>Extract bash history and command history from the compromised system if available.</td><td><span class="code-block">cat ~/.bash_history > /evidence/bash_history.txt 2>/dev/null || cat /root/.bash_history > /evidence/bash_history.txt 2>/dev/null</span></td></tr>
             </table>
 
             <div class="subsection-title">Análise Técnica</div>
-            <div>Analyze the authentication logs for patterns (e.g., repeated usernames, timing). Verify SSH settings (PermitRootLogin, MaxAuthTries). Check for any unusual network connections on port 22. Use auditd to monitor subsequent login attempts. Correlate with external threat intel for the source IP.</div>
+            <div>Analyze the sequence of commands: 'cat /proc/mounts' confirms system enumeration; '/bin/busybox VSEPU' is a known Mirai binary; 'cd /dev/shm; cat .s || cp /bin/echo .s' creates a persistence file; 'tftp; wget; /bin/busybox VSEPU' attempts to download additional payloads. The use of 'dd bs=52 count=1 if=.s' suggests the attacker is extracting a binary payload from .s. The absence of shell output in logs indicates the binary may have spawned a background process or dropped a daemon.</div>
 
             <div class="subsection-title">Ferramentas e Comandos</div>
             <table>
                 <tr><th>Ferramenta</th><th>Uso</th><th>Exemplo</th></tr>
-                <tr><td>fail2ban</td><td>Automated banning of IPs after repeated failures.</td><td><span class="code-block">fail2ban-client set sshd bantime 86400</span></td></tr><tr><td>auditd</td><td>Real‑time monitoring of authentication events.</td><td><span class="code-block">auditctl -w /var/log/auth.log -p wa</span></td></tr><tr><td>ss</td><td>Inspect active SSH connections.</td><td><span class="code-block">ss -tuln | grep :22</span></td></tr><tr><td>grep</td><td>Search logs for failed attempts.</td><td><span class="code-block">grep -i "Failed password" /var/log/auth.log</span></td></tr><tr><td>md5sum</td><td>Verify integrity of critical files.</td><td><span class="code-block">md5sum /etc/shadow</span></td></tr>
+                <tr><td>volatility</td><td>Analyze memory dumps to detect hidden processes, network connections, and injected code.</td><td><span class="code-block">volatility -f /evidence/ramdump.raw --profile=LinuxUbuntu_5_4_0-100-generic linux_netstat</span></td></tr><tr><td>grep</td><td>Search for known malicious strings in logs and files.</td><td><span class="code-block">grep -i 'vsepu' /var/log/cowrie/cowrie.*</span></td></tr><tr><td>strings</td><td>Extract readable strings from binary files like .s or busybox.</td><td><span class="code-block">strings /evidence/dev_shm_forensic/.s | grep -E 'http|https|\.com|\.net'</span></td></tr><tr><td>yara</td><td>Scan files for known Mirai malware signatures.</td><td><span class="code-block">yara -r /rules/mirai.yar /evidence/dev_shm_forensic/.s</span></td></tr><tr><td>sha256sum</td><td>Generate hash of suspicious files for threat intelligence lookup.</td><td><span class="code-block">sha256sum /evidence/dev_shm_forensic/.s</span></td></tr>
             </table>
 
             <div class="subsection-title">Indicadores de Comprometimento</div>
             <ul>
-                <li>Source IP: 192.168.1.100</li><li>Destination IP: 10.0.0.1</li><li>Port: 22</li><li>User: admin</li><li>15 failed login attempts within 5 minutes</li><li>Repeated 'Failed password' entries in /var/log/auth.log</li>
+                <li>177.75.222.254</li><li>ubnt/ubnt</li><li>/bin/busybox VSEPU</li><li>/dev/shm/.s</li><li>tftp</li><li>wget</li><li>dd bs=52 count=1 if=.s</li><li>VSEPU</li><li>linux-hppa-msb</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Procedimentos de Contenção</div>
             <ul>
-                <li><b>Ações Imediatas:</b> Immediately block the offending IP using the firewall: iptables -A INPUT -s 192.168.1.100 -j DROP.</li>
-                <li><b>Isolamento do Sistema:</b> If the host is part of a critical subnet, isolate it by disabling its network interface or placing it in a quarantine VLAN.</li>
-                <li><b>Bloqueio de Atividades Maliciosas:</b> Configure fail2ban to ban the IP for 24 hours and set MaxAuthTries to 3 in /etc/ssh/sshd_config. Restart sshd after changes.</li>
-                <li><b>Preservação de Evidências:</b> Before making any configuration changes, copy all relevant logs and configuration files to a secure, write‑protected storage. Use immutable logging (e.g., rsyslog with disk‑based journaling).</li>
+                <li><b>Ações Imediatas:</b> Immediately disconnect the affected host (172.29.0.2) from the network. Block the source IP (177.75.222.254) at the firewall. Disable Telnet service on all devices in the environment.</li>
+                <li><b>Isolamento do Sistema:</b> Use network segmentation to isolate the subnet containing 172.29.0.2. Execute: iptables -A INPUT -s 177.75.222.254 -j DROP && iptables -A OUTPUT -d 177.75.222.254 -j DROP on all perimeter firewalls. If in cloud, apply security group rules to block all traffic to/from 177.75.222.254.</li>
+                <li><b>Bloqueio de Atividades Maliciosas:</b> Block the following domains/IPs in DNS and firewall: tftp://*, wget://*, and any domains resolving to known Mirai C2 servers (e.g., via VirusTotal or AlienVault OTX). Add hash of .s file (if known) to EDR blocklist. Block port 23/TCP outbound from internal network.</li>
+                <li><b>Preservação de Evidências:</b> Before powering off the system, capture a full memory dump using LiME: insmod /opt/lime/lime-5.4.0-100-generic.ko 'path=/evidence/ramdump.raw format=raw'. Copy /dev/shm, /tmp, /var/log, and /root/.bash_history to a secure forensic volume. Hash all files: find /evidence -type f -exec sha256sum {} \; > /evidence/checksums.sha256</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Etapas de Erradicação</div>
             <ul>
-                <li><b>Remoção da Ameaça:</b> Remove any malicious cron jobs or scheduled tasks that may have been created by the attacker. Verify /etc/cron.* and /var/spool/cron for unknown entries.</li>
-                <li><b>Correção de Vulnerabilidades:</b> Ensure SSH is patched to the latest version, enforce key‑based authentication, disable root login, and set a strong MaxAuthTries limit. Apply any pending OS security updates.</li>
-                <li><b>Verificação de Movimento Lateral:</b> Run a host‑based intrusion detection scan (e.g., chkrootkit, rkhunter) and review network logs for unusual outbound connections. Verify that no backdoors or remote shells remain.</li>
+                <li><b>Remoção da Ameaça:</b> Remove all instances of /dev/shm/.s and /bin/busybox if modified. Use: find /dev/shm -name ".s" -delete && find /tmp -name "*.s" -delete && rm -f /tmp/VSEPU /tmp/busybox. Scan the system with ClamAV: clamscan -r --bell -i /dev/shm /tmp /var/tmp. Use YARA to scan for Mirai signatures: yara -r /rules/mirai.yar /</li>
+                <li><b>Correção de Vulnerabilidades:</b> Disable Telnet service entirely: systemctl disable telnet.socket && systemctl stop telnet.socket. Replace with SSH and enforce key-based authentication. Change all default credentials on IoT devices. Apply firmware updates to all devices on the network. Block inbound TCP/23 at the firewall for all internal and external IPs.</li>
+                <li><b>Verificação de Movimento Lateral:</b> Scan all devices on the same subnet (172.29.0.0/24) for open Telnet ports: nmap -p 23 --open 172.29.0.0/24 -oG /evidence/telnet_scan.txt. Check for successful logins in Cowrie logs from other IPs targeting the same device. Look for outbound connections from other devices to 177.75.222.254 or known Mirai C2 IPs using netflow data.</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Procedimentos de Recuperação</div>
             <ul>
-                <li><b>Restauração do Sistema:</b> Restore the host from the latest clean backup if the integrity of critical files is compromised. Otherwise, re‑install the OS and re‑apply configuration from the backup snapshot.</li>
-                <li><b>Validação de Integridade:</b> Recalculate checksums of /etc/shadow, /etc/ssh/sshd_config, and other critical binaries. Compare against known good values from the backup or vendor signatures.</li>
-                <li><b>Retorno às Operações:</b> After validation, re‑enable the host in the network, remove the firewall block on the IP, and monitor for any repeat attempts. Document the incident and update the incident log.</li>
+                <li><b>Restauração do Sistema:</b> Rebuild the compromised host from a known-good image or firmware. Do not restore from backup if it contains /dev/shm/.s or modified busybox. Deploy the latest vendor firmware for the device (likely Ubiquiti). Reconfigure with strong SSH keys and disable root login.</li>
+                <li><b>Validação de Integridade:</b> Verify system integrity using checksums: compare sha256sum of /bin/busybox, /bin/sh, and /bin/echo against a clean baseline. Use AIDE or Tripwire: aide --init && aide --check. Validate that /dev/shm is empty and no hidden processes exist: ps aux | grep -E '(vsepu|busybox)' && ls -la /dev/shm</li>
+                <li><b>Retorno às Operações:</b> Return the system to production only after: 1) All forensic evidence is preserved, 2) System is rebuilt with updated firmware, 3) Network rules block Telnet and known malicious IPs, 4) No lateral movement detected on other systems, and 5) SIEM alerts confirm no further connections from 177.75.222.254 for 72 hours.</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Lições Aprendidas & Prevenção</div>
             <ul>
-                <li><b>Recomendações Preventivas:</b> Implement rate‑limiting on SSH, enforce MFA for privileged accounts, and deploy a centralized SIEM rule to detect rapid failed logins. Use YARA rules to flag suspicious SSH binaries.</li>
-                <li><b>Melhorias de Segurança:</b> Enable auditd for all authentication events, enforce strict SSH hardening (PermitRootLogin no, PasswordAuthentication no), and regularly rotate SSH keys. Conduct quarterly penetration tests focusing on credential access.</li>
-                <li><b>Atualizações de Políticas:</b> Update the incident response policy to include mandatory fail2ban configuration for all SSH servers, define a 24‑hour ban policy for brute‑force attempts, and require two‑factor authentication for admin accounts.</li>
+                <li><b>Recomendações Preventivas:</b> Deploy EDR with behavioral detection for /bin/busybox execution and unusual tftp/wget activity. Create SIEM rule: IF eventid="cowrie.login.success" AND username IN ["ubnt","root","admin","guest"] AND password IN ["ubnt","admin","password","1234"] THEN trigger critical alert. Block all outbound tftp and wget from non-whitelisted hosts.</li>
+                <li><b>Melhorias de Segurança:</b> Enforce network segmentation: isolate IoT devices on a separate VLAN with no outbound internet access. Disable Telnet on all devices by default. Implement mandatory credential rotation for IoT devices. Enable SSH key authentication and disable password login. Deploy honeypots (Cowrie) to detect scanning and brute force attempts.</li>
+                <li><b>Atualizações de Políticas:</b> Update incident response policy to require immediate isolation of any device with successful Telnet login. Update asset inventory to classify all IoT devices as critical and require quarterly firmware audits. Mandate that all default credentials be changed during device onboarding. Require SIEM alerting on any login to port 23 with username/password combo from known default lists.</li>
             </ul>
         </section>
     </div>

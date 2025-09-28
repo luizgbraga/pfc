@@ -1,0 +1,13 @@
+Elapsed time (s): 29.14
+Max RSS delta (MB): 0.00
+User CPU time delta (s): 0.13
+System CPU time delta (s): 0.21
+
+--- Max observed during run ---
+Max CPU percent: 8.8
+Max per-CPU percent: [88.9, 88.9, 88.7, 84.9, 100.0, 90.0, 74.5, 64.0]
+Max RSS (MB): 73.34
+Max memory percent: 0.90
+Max threads: 3
+Max GPU load (%): 0.0
+Max GPU memory used (MB): 0.0

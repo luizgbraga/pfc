@@ -1,0 +1,595 @@
+{
+  "context_from_subgraph": "O subgrafo fornecido cont\u00e9m informa\u00e7\u00f5es sobre tr\u00e1fego de rede, incluindo tipos de tr\u00e1fego, como tr\u00e1fego de intranet, tr\u00e1fego de e-mail, tr\u00e1fego OT, tr\u00e1fego DHCP, tr\u00e1fego de entrada, tr\u00e1fego RPC, tr\u00e1fego de transfer\u00eancia de arquivos, tr\u00e1fego administrativo, tr\u00e1fego IPC, tr\u00e1fego DNS, tr\u00e1fego de sa\u00edda, tr\u00e1fego web, tr\u00e1fego TFTP e tr\u00e1fego de internet. Al\u00e9m disso, inclui conceitos relacionados \u00e0 detec\u00e7\u00e3o de anomalias, an\u00e1lise de tr\u00e1fego e t\u00e9cnicas de ataque.",
+  "incident_summary": {
+    "overview": "O incidente envolve uma campanha de reconhecimento de dispositivos IoT e prepara\u00e7\u00e3o de botnet multi-arquitetura, com registros de login bem-sucedidos, comandos executados e downloads de arquivos.",
+    "technical_classification": "Amea\u00e7a de rede, especificamente reconhecimento e prepara\u00e7\u00e3o de botnet.",
+    "severity_assessment": "Alta, devido ao potencial de comprometimento de dispositivos IoT e poss\u00edveis ataques de botnet.",
+    "potential_impact": "O impacto pode incluir a perda de dados, comprometimento de dispositivos, uso indevido de recursos e poss\u00edveis ataques adicionais."
+  },
+  "investigation_steps": {
+    "triage_steps": "Analisar os logs de tr\u00e1fego de rede para identificar padr\u00f5es suspeitos, verificar a autenticidade dos logins e comandos executados, e investigar downloads de arquivos.",
+    "evidence_collection": [
+      {
+        "description": "Coletar logs de tr\u00e1fego de rede",
+        "command": "tcpdump -i any -w capture.pcap"
+      },
+      {
+        "description": "Coletar informa\u00e7\u00f5es de sistema",
+        "command": "uname -a"
+      }
+    ],
+    "technical_analysis": "Analisar os logs coletados para identificar padr\u00f5es de tr\u00e1fego suspeitos, executar comandos para verificar a presen\u00e7a de malware e analisar os downloads de arquivos.",
+    "tools_and_commands": [
+      {
+        "tool": "tcpdump",
+        "usage": "Capturar tr\u00e1fego de rede",
+        "example": "tcpdump -i any -w capture.pcap"
+      },
+      {
+        "tool": "Wireshark",
+        "usage": "Analisar tr\u00e1fego de rede",
+        "example": "wireshark capture.pcap"
+      }
+    ],
+    "indicators_of_compromise": [
+      "Registros de login suspeitos",
+      "Comandos executados de forma anormal",
+      "Downloads de arquivos desconhecidos"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Isolar os dispositivos comprometidos, bloquear o tr\u00e1fego de rede suspeito e iniciar a an\u00e1lise de logs.",
+    "system_isolation": "Isolar os sistemas afetados para evitar a propaga\u00e7\u00e3o da amea\u00e7a.",
+    "malicious_activity_blocking": "Bloquear o tr\u00e1fego de rede suspeito para evitar a comunica\u00e7\u00e3o com servidores de comando e controle.",
+    "evidence_preservation": "Preservar as evid\u00eancias coletadas para an\u00e1lise posterior."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover o malware ou amea\u00e7a identificada dos dispositivos comprometidos.",
+    "vulnerability_fix": "Corrigir as vulnerabilidades exploradas para evitar reincid\u00eancia.",
+    "lateral_movement_check": "Verificar se houve movimenta\u00e7\u00e3o lateral dentro da rede e tomar medidas para cont\u00ea-la."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar os sistemas afetados para um estado conhecido e seguro.",
+    "integrity_validation": "Validar a integridade dos sistemas restaurados para garantir que n\u00e3o haja resqu\u00edcios de malware.",
+    "return_to_operations": "Retornar \u00e0s opera\u00e7\u00f5es normais ap\u00f3s a confirma\u00e7\u00e3o de que os sistemas est\u00e3o seguros e livres de amea\u00e7as."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar medidas de seguran\u00e7a adicionais, como firewalls, sistemas de detec\u00e7\u00e3o de intrusos e atualiza\u00e7\u00f5es de software regulares.",
+    "security_improvements": "Melhorar a seguran\u00e7a dos dispositivos IoT e da rede, incluindo a implementa\u00e7\u00e3o de autentica\u00e7\u00e3o multifator e criptografia.",
+    "policy_updates": "Atualizar as pol\u00edticas de seguran\u00e7a para incluir procedimentos de resposta a incidentes e treinamento de funcion\u00e1rios."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#IntranetNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#IntranetNetworkTraffic",
+        "labels": [
+          "Intranet Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#MailNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#MailNetworkTraffic",
+        "labels": [
+          "Mail Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OTNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OTNetworkTraffic",
+        "labels": [
+          "OT Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DHCPNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DHCPNetworkTraffic",
+        "labels": [
+          "DHCP Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#InboundNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#InboundNetworkTraffic",
+        "labels": [
+          "Inbound Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#RPCNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#RPCNetworkTraffic",
+        "labels": [
+          "RPC Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileTransferNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileTransferNetworkTraffic",
+        "labels": [
+          "File Transfer Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#AdministrativeNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#AdministrativeNetworkTraffic",
+        "labels": [
+          "Administrative Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#IPCNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#IPCNetworkTraffic",
+        "labels": [
+          "IPC Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DNSNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DNSNetworkTraffic",
+        "labels": [
+          "DNS Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OutboundNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OutboundNetworkTraffic",
+        "labels": [
+          "Outbound Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#WebNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#WebNetworkTraffic",
+        "labels": [
+          "Web Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#TFTPNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#TFTPNetworkTraffic",
+        "labels": [
+          "TFTP Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#InternetNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#InternetNetworkTraffic",
+        "labels": [
+          "Internet Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer",
+        "labels": [
+          "Digital Information Bearer"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ProtocolMetadataAnomalyDetection": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProtocolMetadataAnomalyDetection",
+        "labels": [
+          "Protocol Metadata Anomaly Detection"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#UserGeolocationLogonPatternAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserGeolocationLogonPatternAnalysis",
+        "labels": [
+          "User Geolocation Logon Pattern Analysis"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#PerHostDownload-UploadRatioAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#PerHostDownload-UploadRatioAnalysis",
+        "labels": [
+          "Per Host Download-Upload Ratio Analysis"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Client-serverPayloadProfiling": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Client-serverPayloadProfiling",
+        "labels": [
+          "Client-server Payload Profiling"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficSignatureAnalysis": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficSignatureAnalysis",
+        "labels": [
+          "Network Traffic Signature Analysis"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#RemoteTerminalSessionDetection": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#RemoteTerminalSessionDetection",
+        "labels": [
+          "Remote Terminal Session Detection"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficCommunityDeviation": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficCommunityDeviation",
+        "labels": [
+          "Network Traffic Community Deviation"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainName": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainName",
+        "labels": [
+          "Domain Name"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkPacket": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkPacket",
+        "labels": [
+          "Network Packet"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficFiltering": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficFiltering",
+        "labels": [
+          "Network Traffic Filtering"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#DS0029": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#DS0029",
+        "labels": [
+          "Network Traffic (ATT&CK DS)"
+        ],
+        "comments": [
+          "The digital artifact mapping for this data source is only applicable to the Network Traffic Content component"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1557": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1557",
+        "labels": [
+          "Adversary-in-the-Middle"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1205": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1205",
+        "labels": [
+          "Traffic Signaling"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1018": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1018",
+        "labels": [
+          "Remote System Discovery"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#InboundInternetNetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#InboundInternetNetworkTraffic",
+        "labels": [
+          "Inbound Internet Network Traffic"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1205.001": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1205.001",
+        "labels": [
+          "Port Knocking"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkSession": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkSession",
+        "labels": [
+          "Network Session"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkProtocolAnalyzer": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkProtocolAnalyzer",
+        "labels": [
+          "Network Protocol Analyzer"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1550.001": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1550.001",
+        "labels": [
+          "Application Access Token"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1218.003": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1218.003",
+        "labels": [
+          "CMSTP"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1565.002": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1565.002",
+        "labels": [
+          "Transmitted Data Manipulation"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkFlow": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkFlow",
+        "labels": [
+          "Network Flow"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#PhysicalLocation": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#PhysicalLocation",
+        "labels": [
+          "Physical Location"
+        ],
+        "comments": [],
+        "depth": 1
+      }
+    },
+    "relationships": [
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#IntranetNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#MailNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#OTNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DHCPNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#InboundNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#RPCNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileTransferNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#AdministrativeNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#IPCNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DNSNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#OutboundNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#WebNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#TFTPNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#InternetNetworkTraffic",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DigitalInformationBearer",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ProtocolMetadataAnomalyDetection",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#UserGeolocationLogonPatternAnalysis",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#PerHostDownload-UploadRatioAnalysis",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Client-serverPayloadProfiling",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficSignatureAnalysis",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#RemoteTerminalSessionDetection",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficCommunityDeviation",
+        "type": "ns0__analyzes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DomainName",
+        "type": "ns0__may-contain"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkPacket",
+        "type": "ns0__contains"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTrafficFiltering",
+        "type": "ns0__filters"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#DS0029",
+        "type": "ns0__exactly"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1557",
+        "type": "ns0__produces"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1205",
+        "type": "ns0__produces"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1018",
+        "type": "ns0__produces"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#InboundInternetNetworkTraffic",
+        "type": "ns0__produces"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1205.001",
+        "type": "ns0__produces"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkSession",
+        "type": "ns0__produces"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkProtocolAnalyzer",
+        "type": "ns0__monitors"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1550.001",
+        "type": "ns0__may-produce"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1218.003",
+        "type": "ns0__may-produce"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1565.002",
+        "type": "ns0__may-modify"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkFlow",
+        "type": "ns0__summarizes"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#PhysicalLocation",
+        "type": "ns0__originates-from"
+      }
+    ]
+  }
+}

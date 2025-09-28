@@ -1,0 +1,78 @@
+{
+  "context_from_subgraph": "foo",
+  "incident_summary": {
+    "overview": "Um ataque de t\u00fanel SSH foi detectado, onde um invasor estabeleceu uma conex\u00e3o SSH com o objetivo de criar um t\u00fanel para relays de e-mail. O invasor tentou autenticar-se com v\u00e1rias combina\u00e7\u00f5es de senhas antes de ser bem-sucedido.",
+    "technical_classification": "Tunneling Attack with Port Forwarding for Email Relay Abuse",
+    "severity_assessment": "High",
+    "potential_impact": "The attacker could use the compromised system to relay emails through the internal network, potentially leading to data exfiltration or other malicious activities."
+  },
+  "investigation_steps": {
+    "triage_steps": "1. Verificar logs de conex\u00e3o SSH para identificar atividades suspeitas.\n2. Verificar logs de autentica\u00e7\u00e3o para identificar tentativas de login mal-sucedidas.\n3. Verificar logs de conex\u00e3o direta TCP/IP para identificar t\u00faneis estabelecidos.",
+    "evidence_collection": [
+      {
+        "description": "Coletar logs de conex\u00e3o SSH",
+        "command": "cat /var/log/auth.log | grep 'cowrie.session.connect'"
+      },
+      {
+        "description": "Coletar logs de autentica\u00e7\u00e3o",
+        "command": "cat /var/log/auth.log | grep 'cowrie.login'"
+      },
+      {
+        "description": "Coletar logs de conex\u00e3o direta TCP/IP",
+        "command": "cat /var/log/auth.log | grep 'cowrie.direct-tcpip'"
+      }
+    ],
+    "technical_analysis": "Analisar os logs coletados para identificar padr\u00f5es de comportamento suspeitos, como tentativas de login mal-sucedidas e conex\u00f5es diretas TCP/IP.",
+    "tools_and_commands": [
+      {
+        "tool": "logparser",
+        "usage": "Usar para analisar logs de forma mais eficiente.",
+        "example": "logparser -i:csv -o:txt -rtp:off /var/log/auth.log"
+      },
+      {
+        "tool": "grep",
+        "usage": "Usar para filtrar logs com base em palavras-chave.",
+        "example": "grep 'cowrie.login.failed' /var/log/auth.log"
+      }
+    ],
+    "indicators_of_compromise": [
+      "80.94.95.15",
+      "172.29.0.2",
+      "81.19.77.166:587"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Isolar o sistema comprometido imediatamente.",
+    "system_isolation": "Desconectar o sistema do ambiente de rede.",
+    "malicious_activity_blocking": "Bloquear o IP do invasor.",
+    "evidence_preservation": "Preservar evid\u00eancias antes de qualquer altera\u00e7\u00e3o."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover o invasor do sistema.",
+    "vulnerability_fix": "Corrigir vulnerabilidades identificadas.",
+    "lateral_movement_check": "Verificar se o ataque se propaga para outros sistemas."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar o sistema a partir de um ponto de restaura\u00e7\u00e3o conhecido.",
+    "integrity_validation": "Verificar a integridade do sistema restaurado.",
+    "return_to_operations": "Retornar ao ambiente de opera\u00e7\u00f5es ap\u00f3s a verifica\u00e7\u00e3o de integridade."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar autentica\u00e7\u00e3o multifator, rotacionar senhas regularmente e monitorar atividades de login.",
+    "security_improvements": "Hardenizar sistemas SSH, desabilitar autentica\u00e7\u00e3o de senha e implementar autentica\u00e7\u00e3o de chave p\u00fablica.",
+    "policy_updates": "Atualizar pol\u00edticas de seguran\u00e7a para incluir diretrizes mais r\u00edgidas sobre autentica\u00e7\u00e3o e monitoramento."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "context_from_subgraph": "O subgrafo DEFEND indica que o incidente envolve execu\u00e7\u00e3o remota de c\u00f3digo via SSH, uso de credenciais comprometidas do usu\u00e1rio 'admin', movimenta\u00e7\u00e3o lateral detectada por conex\u00f5es SSH n\u00e3o autorizadas, e presen\u00e7a de artefato malicioso '/tmp/.xpl'. O n\u00f3 de ataque est\u00e1 relacionado a 'Initial Access' (TA0001), 'Execution' (TA0002) e 'Lateral Movement' (TA0008).",
+  "incident_summary": {
+    "overview": "Foi detectado acesso remoto n\u00e3o autorizado via SSH ao servidor 'srv-app01' utilizando as credenciais do usu\u00e1rio 'admin'. Ap\u00f3s o login, o atacante executou comandos para upload e execu\u00e7\u00e3o do artefato malicioso '/tmp/.xpl', seguido de tentativas de conex\u00e3o SSH para outros servidores internos, caracterizando movimenta\u00e7\u00e3o lateral.",
+    "technical_classification": "Comprometimento de credenciais (Credential Access), Execu\u00e7\u00e3o Remota de C\u00f3digo (Remote Code Execution), Movimenta\u00e7\u00e3o Lateral (Lateral Movement) conforme ontologia DEFEND.",
+    "severity_assessment": "Alta. O atacante obteve acesso privilegiado, executou c\u00f3digo malicioso e tentou expandir o comprometimento para outros sistemas internos, com potencial para escalonamento de privil\u00e9gios e exfiltra\u00e7\u00e3o de dados.",
+    "potential_impact": "Risco de comprometimento de m\u00faltiplos servidores, poss\u00edvel exfiltra\u00e7\u00e3o de dados sens\u00edveis, interrup\u00e7\u00e3o de servi\u00e7os cr\u00edticos e necessidade de restaura\u00e7\u00e3o de sistemas afetados."
+  },
+  "investigation_steps": {
+    "triage_steps": "1. Identificar hosts afetados pelo login SSH suspeito. 2. Verificar logs de autentica\u00e7\u00e3o e comandos executados. 3. Localizar artefatos maliciosos e conex\u00f5es de rede incomuns.",
+    "evidence_collection": [
+      {
+        "description": "Coletar logs de autentica\u00e7\u00e3o SSH",
+        "command": "cp /var/log/auth.log /mnt/forense/auth.log"
+      },
+      {
+        "description": "Coletar hist\u00f3rico de comandos do usu\u00e1rio comprometido",
+        "command": "cp /home/admin/.bash_history /mnt/forense/admin_bash_history"
+      },
+      {
+        "description": "Coletar artefato malicioso para an\u00e1lise",
+        "command": "cp /tmp/.xpl /mnt/forense/.xpl"
+      },
+      {
+        "description": "Coletar lista de conex\u00f5es de rede ativas",
+        "command": "netstat -antp > /mnt/forense/netstat_srv-app01.txt"
+      },
+      {
+        "description": "Coletar imagem de mem\u00f3ria RAM",
+        "command": "avml /mnt/forense/mem_srv-app01.lime"
+      }
+    ],
+    "technical_analysis": "Analisar logs de autentica\u00e7\u00e3o para identificar origem do acesso (IP de origem), hor\u00e1rios e poss\u00edveis tentativas de brute force. Revisar hist\u00f3rico de comandos para identificar a\u00e7\u00f5es p\u00f3s-comprometimento. Examinar o artefato '/tmp/.xpl' com antiv\u00edrus e an\u00e1lise est\u00e1tica/din\u00e2mica. Verificar conex\u00f5es SSH de sa\u00edda para identificar movimenta\u00e7\u00e3o lateral. Analisar imagem de mem\u00f3ria para detectar processos maliciosos em execu\u00e7\u00e3o.",
+    "tools_and_commands": [
+      {
+        "tool": "grep",
+        "usage": "Buscar entradas de login SSH do usu\u00e1rio admin",
+        "example": "grep 'Accepted password for admin' /var/log/auth.log"
+      },
+      {
+        "tool": "logparser",
+        "usage": "Filtrar tentativas de login SSH por IP de origem",
+        "example": "logparser 'SELECT * FROM /var/log/auth.log WHERE Text LIKE \"%sshd%\" AND Text LIKE \"%admin%\"'"
+      },
+      {
+        "tool": "clamscan",
+        "usage": "Verificar artefato malicioso",
+        "example": "clamscan /mnt/forense/.xpl"
+      },
+      {
+        "tool": "volatility",
+        "usage": "Listar processos suspeitos na imagem de mem\u00f3ria",
+        "example": "volatility -f /mnt/forense/mem_srv-app01.lime linux_pslist"
+      },
+      {
+        "tool": "yara",
+        "usage": "Detectar padr\u00f5es maliciosos no artefato coletado",
+        "example": "yara /opt/yara_rules/malware_rules.yar /mnt/forense/.xpl"
+      }
+    ],
+    "indicators_of_compromise": [
+      "IP de origem SSH: 203.0.113.45",
+      "Usu\u00e1rio: admin",
+      "Artefato: /tmp/.xpl",
+      "Comandos executados: wget, chmod, ./xpl",
+      "Conex\u00f5es SSH de sa\u00edda para 10.10.10.12 e 10.10.10.13"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Revogar imediatamente as credenciais do usu\u00e1rio 'admin' e bloquear sess\u00f5es SSH ativas suspeitas.",
+    "system_isolation": "Isolar o servidor 'srv-app01' da rede para evitar propaga\u00e7\u00e3o. Exemplo: ifconfig eth0 down ou desconectar cabo de rede.",
+    "malicious_activity_blocking": "Bloquear IP de origem do atacante no firewall: iptables -A INPUT -s 203.0.113.45 -j DROP. Bloquear conex\u00f5es SSH de sa\u00edda temporariamente: iptables -A OUTPUT -p tcp --dport 22 -j DROP.",
+    "evidence_preservation": "Antes de qualquer altera\u00e7\u00e3o, garantir c\u00f3pia forense dos logs, artefatos e imagem de mem\u00f3ria. N\u00e3o reiniciar o sistema at\u00e9 a coleta completa."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover o artefato '/tmp/.xpl' e quaisquer processos associados. Exemplo: pkill -f .xpl; rm -f /tmp/.xpl. Verificar e remover persist\u00eancias (crontab, systemd, rc.local).",
+    "vulnerability_fix": "Alterar todas as senhas de usu\u00e1rios afetados. Aplicar patches de seguran\u00e7a do sistema operacional e do servi\u00e7o SSH. Desabilitar autentica\u00e7\u00e3o por senha, habilitar autentica\u00e7\u00e3o por chave p\u00fablica.",
+    "lateral_movement_check": "Verificar logs de autentica\u00e7\u00e3o e conex\u00f5es SSH em outros servidores internos (10.10.10.12, 10.10.10.13) para identificar poss\u00edveis comprometimentos adicionais. Repetir coleta e an\u00e1lise de evid\u00eancias nestes hosts."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar o servidor a partir de backup \u00edntegro anterior ao incidente. Reinstalar sistema operacional se necess\u00e1rio.",
+    "integrity_validation": "Comparar checksums de arquivos cr\u00edticos com baseline confi\u00e1vel: sha256sum -c /mnt/baseline/sha256sums.txt. Verificar aus\u00eancia de artefatos e processos suspeitos.",
+    "return_to_operations": "Liberar o sistema para produ\u00e7\u00e3o apenas ap\u00f3s valida\u00e7\u00e3o completa, aplica\u00e7\u00e3o de patches, altera\u00e7\u00e3o de credenciais e monitoramento refor\u00e7ado dos acessos."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar autentica\u00e7\u00e3o multifator para SSH. Restringir acesso SSH por IP. Monitorar tentativas de login e alertar para acessos suspeitos.",
+    "security_improvements": "Criar regras YARA para detec\u00e7\u00e3o de variantes do artefato '/tmp/.xpl'. Configurar SIEM para alertar sobre logins SSH fora do hor\u00e1rio padr\u00e3o e tentativas de movimenta\u00e7\u00e3o lateral.",
+    "policy_updates": "Atualizar pol\u00edtica de senhas e acesso remoto. Revisar procedimentos de resposta a incidentes para incluir coleta forense imediata e isolamento automatizado de hosts comprometidos."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1078": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1078",
+        "labels": [
+          "Valid Accounts"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ContentModification": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ContentModification",
+        "labels": [
+          "Content Modification"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

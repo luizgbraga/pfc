@@ -1,0 +1,135 @@
+{
+  "context_from_subgraph": "foo",
+  "incident_summary": {
+    "overview": "Um ator malicioso acessou um servidor Ubuntu 20.04 via SSH usando credenciais comprometidas, baixou e executou um script malicioso de um IP externo (185.130.105.22), instalou persist\u00eancia via crontab e estabeleceu conex\u00e3o C2. O malware foi identificado como um backdoor de baixo n\u00edvel, com nome disfar\u00e7ado como 'systemd-update'.",
+    "technical_classification": "Comprometimento de sistema via acesso remoto n\u00e3o autorizado (T1110.003 - Brute Force) seguido por Execu\u00e7\u00e3o de C\u00f3digo Malicioso (T1059.003 - Command and Scripting Interpreter) e Persist\u00eancia (T1053.005 - Scheduled Task/Job)",
+    "severity_assessment": "Alta. O ataque resultou em acesso root, persist\u00eancia persistente, exfiltra\u00e7\u00e3o potencial de dados e comunica\u00e7\u00e3o C2 ativa. O sistema foi totalmente comprometido e pode ser usado como ponto de partida para movimento lateral na rede.",
+    "potential_impact": "Perda de confidencialidade e integridade dos dados no servidor; risco de propaga\u00e7\u00e3o para outros sistemas da rede interna; poss\u00edvel exfiltra\u00e7\u00e3o de credenciais, chaves SSH ou dados sens\u00edveis; impacto operacional se o servidor for cr\u00edtico para servi\u00e7os de autentica\u00e7\u00e3o ou hospedagem."
+  },
+  "investigation_steps": {
+    "triage_steps": "Verificar logs de autentica\u00e7\u00e3o SSH (/var/log/auth.log) para identificar o IP de origem e o usu\u00e1rio comprometido. Confirmar se o acesso foi bem-sucedido sem falhas anteriores. Checar processos em execu\u00e7\u00e3o com 'ps aux | grep -i systemd' e conex\u00f5es de rede ativas com 'netstat -tulnp'.",
+    "evidence_collection": [
+      {
+        "description": "Copiar logs de autentica\u00e7\u00e3o SSH para an\u00e1lise forense",
+        "command": "cp /var/log/auth.log /evidence/auth.log.bak && gzip /evidence/auth.log.bak"
+      },
+      {
+        "description": "Extrair lista de processos em execu\u00e7\u00e3o e suas linhas de comando",
+        "command": "ps aux --forest > /evidence/processes.txt"
+      },
+      {
+        "description": "Capturar conex\u00f5es de rede ativas e processos associados",
+        "command": "netstat -tulnp > /evidence/network_connections.txt"
+      },
+      {
+        "description": "Salvar conte\u00fado do arquivo malicioso e do crontab",
+        "command": "cat /tmp/.systemd-update > /evidence/malware_script.sh && cat /etc/cron.d/systemd-update > /evidence/persistence_cron.txt"
+      },
+      {
+        "description": "Gerar hash SHA256 do arquivo malicioso para refer\u00eancia",
+        "command": "sha256sum /tmp/.systemd-update > /evidence/malware_sha256.txt"
+      }
+    ],
+    "technical_analysis": "Analisar o script malicioso quanto a comandos de exfiltra\u00e7\u00e3o, persist\u00eancia, e escalonamento de privil\u00e9gios. Verificar se o arquivo foi modificado ap\u00f3s a execu\u00e7\u00e3o (timestamps). Comparar o hash do arquivo com base de conhecimento de malware conhecido. Investigar se o mesmo IP foi usado em outros sistemas da rede. Verificar se o usu\u00e1rio 'admin' tem permiss\u00f5es elevadas al\u00e9m do esperado.",
+    "tools_and_commands": [
+      {
+        "tool": "grep",
+        "usage": "Buscar padr\u00f5es de conex\u00e3o C2 em logs",
+        "example": "grep '185.130.105.22' /var/log/auth.log"
+      },
+      {
+        "tool": "sha256sum",
+        "usage": "Validar integridade de arquivos suspeitos",
+        "example": "sha256sum /tmp/.systemd-update"
+      },
+      {
+        "tool": "lsof",
+        "usage": "Listar arquivos abertos por processos suspeitos",
+        "example": "lsof -p 1234"
+      },
+      {
+        "tool": "strings",
+        "usage": "Extrair strings leg\u00edveis de bin\u00e1rios ou scripts maliciosos",
+        "example": "strings /tmp/.systemd-update | grep -E 'http|https|\\.com|\\.net'"
+      },
+      {
+        "tool": "awk",
+        "usage": "Extrair IPs de conex\u00f5es suspeitas de netstat",
+        "example": "netstat -tulnp | awk '/185.130.105.22/ {print $5}'"
+      }
+    ],
+    "indicators_of_compromise": [
+      "IP 185.130.105.22 como origem de conex\u00e3o SSH e C2",
+      "Arquivo /tmp/.systemd-update com hash SHA256: a1b2c3d4e5f67890...",
+      "Crontab /etc/cron.d/systemd-update criado sem autoriza\u00e7\u00e3o",
+      "Processo 'systemd-update' (PID 1234) em execu\u00e7\u00e3o com conex\u00e3o TCP para 185.130.105.22:443",
+      "Acesso SSH bem-sucedido do usu\u00e1rio 'admin' sem logs de falha anteriores"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Desligar imediatamente o servidor afetado para evitar exfiltra\u00e7\u00e3o adicional. N\u00e3o reiniciar. Isolar fisicamente ou via switch de rede. Notificar equipe de resposta a incidentes e ger\u00eancia.",
+    "system_isolation": "Bloquear tr\u00e1fego de entrada e sa\u00edda no firewall da rede: iptables -A OUTPUT -d 185.130.105.22 -j DROP && iptables -A INPUT -s 185.130.105.22 -j DROP && iptables -A FORWARD -d 185.130.105.22 -j DROP",
+    "malicious_activity_blocking": "Atualizar regras de firewall corporativo para bloquear o IP 185.130.105.22 em todos os segmentos. Bloquear o dom\u00ednio associado (se aplic\u00e1vel) no DNS filtering. Adicionar hash SHA256 a1b2c3d4e5f67890... \u00e0 lista de bloqueio de EDR/SIEM.",
+    "evidence_preservation": "Criar imagem forense completa do disco r\u00edgido usando dd: dd if=/dev/sda of=/evidence/forensic_image.img bs=4M conv=noerror,sync. Armazenar em m\u00eddia criptografada e validar com sha256sum. Manter logs originais e arquivos maliciosos em armazenamento isolado."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover o arquivo malicioso: rm -f /tmp/.systemd-update. Remover a entrada de persist\u00eancia: crontab -u root -l | grep -v 'systemd-update' | crontab -u root -. Verificar e remover qualquer outra entrada em /etc/cron.hourly/, /etc/cron.daily/, ou /etc/systemd/system/. Verificar se o processo est\u00e1 em execu\u00e7\u00e3o: kill -9 1234.",
+    "vulnerability_fix": "Alterar a senha do usu\u00e1rio 'admin' imediatamente e desativar login por senha SSH. Habilitar autentica\u00e7\u00e3o por chave SSH apenas. Aplicar patch de seguran\u00e7a do OpenSSH e do sistema operacional: apt update && apt upgrade -y. Verificar se o usu\u00e1rio 'admin' \u00e9 necess\u00e1rio; se n\u00e3o, desativar: usermod -L admin.",
+    "lateral_movement_check": "Verificar logs de autentica\u00e7\u00e3o em outros servidores para tentativas de login do mesmo IP ou usu\u00e1rio. Executar 'last' e 'lastlog' em todos os servidores cr\u00edticos. Buscar por arquivos com o mesmo hash SHA256 em outros sistemas: find / -type f -exec sha256sum {} \\; | grep a1b2c3d4e5f67890... . Verificar conex\u00f5es de rede suspeitas com 'ss -tuln' em hosts internos."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar o sistema a partir de uma imagem limpa e verificada, criada antes da data de comprometimento (2024-06-14). Se n\u00e3o houver imagem, reinstalar o sistema operacional do zero. N\u00e3o restaurar arquivos do sistema a partir do sistema comprometido.",
+    "integrity_validation": "Validar a integridade dos arquivos do sistema com AIDE: aide --check. Verificar hashes de arquivos cr\u00edticos como /bin/bash, /usr/bin/ssh, /etc/passwd contra base de confian\u00e7a. Validar que o crontab do root est\u00e1 vazio ou cont\u00e9m apenas entradas autorizadas: crontab -u root -l.",
+    "return_to_operations": "Retornar o sistema \u00e0 opera\u00e7\u00e3o somente ap\u00f3s: (1) valida\u00e7\u00e3o de integridade com AIDE, (2) confirma\u00e7\u00e3o de aus\u00eancia de processos maliciosos com 'ps aux' e 'netstat -tulnp', (3) aplica\u00e7\u00e3o de todas as corre\u00e7\u00f5es de vulnerabilidade, e (4) aprova\u00e7\u00e3o escrita da equipe de seguran\u00e7a. Monitorar tr\u00e1fego por 72h ap\u00f3s retorno."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar regras SIEM para alertar quando: (1) SSH com sucesso de IP externo n\u00e3o listado em whitelist; (2) execu\u00e7\u00e3o de 'curl | bash' como root; (3) cria\u00e7\u00e3o de arquivos em /tmp/ com nome semelhante a 'systemd-*'. Criar regra YARA para detectar scripts maliciosos com padr\u00f5es como 'curl.*|.*bash' e 'crontab'.",
+    "security_improvements": "Habilitar fail2ban com limite de 3 tentativas SSH em 5 minutos. Desativar login root e login por senha SSH. Implementar MFA para acesso SSH via bastion host. Aplicar hardening com CIS Benchmark para Ubuntu 20.04. Restringir sa\u00edda de rede com egress filtering (somente IPs necess\u00e1rios).",
+    "policy_updates": "Atualizar pol\u00edtica de acesso SSH para exigir chaves RSA-4096 ou Ed25519. Proibir execu\u00e7\u00e3o de scripts de fontes externas via curl|bash em servidores produtivos. Exigir aprova\u00e7\u00e3o de mudan\u00e7a e revis\u00e3o por pares para qualquer altera\u00e7\u00e3o em crontab ou systemd. Documentar e treinar equipe em resposta a incidentes com base neste caso."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#User": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "labels": [
+          "User"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

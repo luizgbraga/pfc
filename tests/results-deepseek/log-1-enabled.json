@@ -1,0 +1,79 @@
+{
+  "context_from_subgraph": "foo",
+  "incident_summary": {
+    "overview": "A Telnet brute force attack occurred, resulting in a successful login with 'ubnt/ubnt'. The attacker executed multiple commands, suggesting unauthorized access and possible malicious actions.",
+    "technical_classification": "Network Exploitation - Brute Force Attack",
+    "severity_assessment": "High - The attacker gained access to the system, posing a significant risk of data loss or system compromise.",
+    "potential_impact": "Potential compromise of system data, services, and operations due to unauthorized access and execution of malicious commands."
+  },
+  "investigation_steps": {
+    "triage_steps": "Initiate immediate response, isolate the system, and begin data collection.",
+    "evidence_collection": [
+      {
+        "description": "Collect raw logs from the affected system for analysis.",
+        "command": "sudo tail -f /var/log/auth.log"
+      },
+      {
+        "description": "Capture network traffic to identify the attacker's IP and connection details.",
+        "command": "sudo tcpdump -i eth0 -w /tmp/network_traffic.pcap"
+      }
+    ],
+    "technical_analysis": "Analyze logs for indicators of compromise, such as successful login attempts, unusual commands, and network activity.",
+    "tools_and_commands": [
+      {
+        "tool": "tcpdump",
+        "usage": "Network traffic capture and analysis",
+        "example": "sudo tcpdump -i eth0 -w /tmp/network_traffic.pcap"
+      },
+      {
+        "tool": "grep",
+        "usage": "Text search and filtering",
+        "example": "grep -i 'ubnt/ubnt' /var/log/auth.log"
+      },
+      {
+        "tool": "volatility",
+        "usage": "Memory analysis",
+        "example": "volatility -y | grep -i 'malicious_process'"
+      }
+    ],
+    "indicators_of_compromise": [
+      "IP address 177.75.222.254",
+      "Username 'ubnt'",
+      "Commands executed: 'cat /proc/mounts', 'sh', 'busybox VSEPU'"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Disconnect the system from the network and block the attacker's IP.",
+    "system_isolation": "sudo shutdown -h now && sudo reboot",
+    "malicious_activity_blocking": "sudo iptables -A INPUT -s 177.75.222.254 -j DROP",
+    "evidence_preservation": "Copy logs before any system changes: sudo cp -r /var/log /tmp/log_backup"
+  },
+  "eradication_steps": {
+    "threat_removal": "Remove any malicious files or processes identified during analysis.",
+    "vulnerability_fix": "Patch the Telnet service if still in use and update system software.",
+    "lateral_movement_check": "Verify no additional logins or network connections from the attacker's IP."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restore the system from a known clean backup.",
+    "integrity_validation": "Verify system integrity using checksums and logs.",
+    "return_to_operations": "Resume normal operations after confirming the system is secure."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Discontinue Telnet usage if still operational and implement secure alternatives.",
+    "security_improvements": "Harden systems by limiting Telnet access and enforcing strong authentication.",
+    "policy_updates": "Update security policies to include regular monitoring and incident response procedures."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

@@ -1,0 +1,668 @@
+{
+  "context_from_subgraph": "The subgraph indicates that the incident involves credential access techniques, particularly focusing on brute force attacks and successful login attempts followed by malicious command execution.",
+  "incident_summary": {
+    "overview": "An attacker successfully performed a Telnet brute force attack against the system, gaining unauthorized access using default credentials 'ubnt/ubnt'. Post-login, the attacker executed commands indicative of malware deployment and attempted to download additional files via TFTP and WGET.",
+    "technical_classification": "The incident is classified under the ATT&CK framework as T1110 - Brute Force, specifically targeting Telnet service. The attacker's actions also align with T1059 - Command and Scripting Interpreter, and T1105 - Non-Standard Port.",
+    "severity_assessment": "High severity due to successful unauthorized access, potential data exfiltration, and malware deployment.",
+    "potential_impact": "The compromised system could be used as a pivot point for further attacks within the network, leading to data loss, operational disruption, and potential financial damage."
+  },
+  "investigation_steps": {
+    "triage_steps": "Initial triage should include checking system logs for unusual activity around the time of the incident, verifying the integrity of the Telnet service configuration, and reviewing firewall rules for any anomalies.",
+    "evidence_collection": [
+      {
+        "description": "Collect system logs around the time of the incident.",
+        "command": "journalctl --since=\"2025-05-01T03:54:27.989950Z\" --until=\"2025-05-01T03:54:30.784545Z\""
+      },
+      {
+        "description": "Gather network traffic logs to identify any suspicious outbound connections.",
+        "command": "tcpdump -r /path/to/capture.pcap | grep 177.75.222.254"
+      },
+      {
+        "description": "Inspect file system changes during the incident.",
+        "command": "ls -laR /dev/shm | grep .s"
+      }
+    ],
+    "technical_analysis": "Analyze collected logs for signs of unauthorized access, such as failed login attempts, successful logins, and unusual command executions. Look for any files or directories that were modified or created during the incident.",
+    "tools_and_commands": [
+      {
+        "tool": "grep",
+        "usage": "Search for specific patterns in text files.",
+        "example": "grep -r 'VSEPU' /dev/shm"
+      },
+      {
+        "tool": "volatility",
+        "usage": "Memory forensics tool to analyze memory dumps.",
+        "example": "volatility -f memdump.raw imageinfo"
+      },
+      {
+        "tool": "chkrootkit",
+        "usage": "Detect rootkits and backdoors.",
+        "example": "chkrootkit"
+      }
+    ],
+    "indicators_of_compromise": [
+      "Failed login attempts with various passwords",
+      "Successful login with default credentials",
+      "Execution of suspicious commands like 'cat /proc/mounts', 'cp /bin/echo .s', and '/bin/busybox VSEPU'",
+      "Files or directories named '.s' in unexpected locations"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Immediately disconnect the affected system from the network to prevent further spread of the malware and isolate it from other systems.",
+    "system_isolation": "Isolate the compromised system by removing its network connectivity.",
+    "malicious_activity_blocking": "Block the IP address 177.75.222.254 at the firewall level.",
+    "evidence_preservation": "Preserve all evidence before making any changes to the system, including taking snapshots of the current state of the system."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remove any identified malware or suspicious files from the system. Verify the integrity of critical system files and configurations.",
+    "vulnerability_fix": "Change default credentials and apply security patches to the Telnet service. Ensure strong password policies are enforced.",
+    "lateral_movement_check": "Check for any signs of lateral movement by reviewing logs for any unauthorized access attempts or unusual network traffic."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restore the system to a known good state using backups or reinstall the operating system.",
+    "integrity_validation": "Verify the integrity of restored files and configurations using checksums and hashes.",
+    "return_to_operations": "Return the system to operations only after confirming that all threats have been eradicated and the system is secure."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implement multi-factor authentication for remote access services. Regularly update and patch systems to mitigate known vulnerabilities.",
+    "security_improvements": "Enhance monitoring and logging capabilities to detect and respond to similar incidents more quickly.",
+    "policy_updates": "Update security policies to enforce stronger password requirements and restrict unnecessary services."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#User": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#User",
+        "labels": [
+          "User"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1139": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1139",
+        "labels": [
+          "Bash History"
+        ],
+        "comments": [
+          "This technique has been revoked by T1552.003"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1142": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1142",
+        "labels": [
+          "Keychain"
+        ],
+        "comments": [
+          "This technique has been revoked by T1555.001"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CreateProcess": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CreateProcess",
+        "labels": [
+          "Create Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1556": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1556",
+        "labels": [
+          "Modify Authentication Process"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#ATTACKEnterpriseTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#ATTACKEnterpriseTechnique",
+        "labels": [
+          "ATTACK Enterprise Technique"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1555": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1555",
+        "labels": [
+          "Credentials from Password Stores"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110",
+        "labels": [
+          "Brute Force"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#TA0006": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#TA0006",
+        "labels": [
+          "Credential Access"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1145": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1145",
+        "labels": [
+          "Private Keys"
+        ],
+        "comments": [
+          "This technique has been revoked by T1552.004"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1081": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1081",
+        "labels": [
+          "Credentials in Files"
+        ],
+        "comments": [
+          "This technique has been revoked by T1552.001"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1141": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1141",
+        "labels": [
+          "Input Prompt"
+        ],
+        "comments": [
+          "This technique has been revoked by T1056.002"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1187": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1187",
+        "labels": [
+          "Forced Authentication"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1214": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1214",
+        "labels": [
+          "Credentials in Registry"
+        ],
+        "comments": [
+          "This technique has been revoked by T1552.002"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1179": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1179",
+        "labels": [
+          "Hooking"
+        ],
+        "comments": [
+          "This technique has been revoked by T1056.004"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1167": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1167",
+        "labels": [
+          "Securityd Memory"
+        ],
+        "comments": [
+          "This technique has been revoked by T1555.002"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1503": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1503",
+        "labels": [
+          "Credentials from Web Browsers"
+        ],
+        "comments": [
+          "This technique has been revoked by T1555.003"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1552": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1552",
+        "labels": [
+          "Unsecured Credentials"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1558": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1558",
+        "labels": [
+          "Steal or Forge Kerberos Tickets"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#OffensiveTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#OffensiveTechnique",
+        "labels": [
+          "Offensive Technique"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1557": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1557",
+        "labels": [
+          "Adversary-in-the-Middle"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1649": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1649",
+        "labels": [
+          "Steal or Forge Authentication Certificates"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1208": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1208",
+        "labels": [
+          "Kerberoasting"
+        ],
+        "comments": [
+          "This technique has been revoked by T1558.003"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1528": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1528",
+        "labels": [
+          "Steal Application Access Token"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1040": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1040",
+        "labels": [
+          "Network Sniffing"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1621": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1621",
+        "labels": [
+          "Multi-Factor Authentication Request Generation"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#PasswordFile": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#PasswordFile",
+        "labels": [
+          "Password File"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1212": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1212",
+        "labels": [
+          "Exploitation for Credential Access"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1056": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1056",
+        "labels": [
+          "Input Capture"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1522": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1522",
+        "labels": [
+          "Cloud Instance Metadata API"
+        ],
+        "comments": [
+          "This technique has been revoked by T1552.005"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1171": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1171",
+        "labels": [
+          "LLMNR/NBT-NS Poisoning and Relay"
+        ],
+        "comments": [
+          "This technique has been revoked by T1557.001"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1539": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1539",
+        "labels": [
+          "Steal Web Session Cookie"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1174": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1174",
+        "labels": [
+          "Password Filter DLL"
+        ],
+        "comments": [
+          "This technique has been revoked by T1556.002"
+        ],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1606": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1606",
+        "labels": [
+          "Forge Web Credentials"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Credential": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Credential",
+        "labels": [
+          "Credential"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003",
+        "labels": [
+          "OS Credential Dumping"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1111": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1111",
+        "labels": [
+          "Multi-Factor Authentication Interception"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.001": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.001",
+        "labels": [
+          "Password Guessing"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.004": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.004",
+        "labels": [
+          "Credential Stuffing"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.002": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.002",
+        "labels": [
+          "Password Cracking"
+        ],
+        "comments": [],
+        "depth": 1
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.003": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.003",
+        "labels": [
+          "Password Spraying"
+        ],
+        "comments": [],
+        "depth": 1
+      }
+    },
+    "relationships": [
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1139",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1142",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#CreateProcess",
+        "type": "ns0__may-invoke"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1556",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#ATTACKEnterpriseTechnique",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1555",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#TA0006",
+        "type": "ns0__enables"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1145",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1081",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1141",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1187",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1214",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1179",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1167",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1503",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1552",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1558",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#OffensiveTechnique",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1557",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1649",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1208",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1528",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1040",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1621",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#PasswordFile",
+        "type": "ns0__may-access"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1212",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1056",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1522",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1171",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1539",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1174",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1606",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#Credential",
+        "type": "ns0__accesses"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1003",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1111",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.001",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.004",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.002",
+        "type": "rdfs__subClassOf"
+      },
+      {
+        "source": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110",
+        "target": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.003",
+        "type": "rdfs__subClassOf"
+      }
+    ]
+  }
+}

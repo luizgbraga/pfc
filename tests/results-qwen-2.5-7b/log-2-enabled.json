@@ -1,0 +1,86 @@
+{
+  "context_from_subgraph": "foo",
+  "incident_summary": {
+    "overview": "O incidente envolve uma reconhecimento de dispositivos IoT e prepara\u00e7\u00e3o para uma campanha de botnet multi-architecture. Um atacante conseguiu acessar um dispositivo IoT com credenciais padr\u00e3o e executou comandos para instalar malware em diversos sistemas.",
+    "technical_classification": "Reconhecimento de IoT e prepara\u00e7\u00e3o para botnet",
+    "severity_assessment": "Alta. O ataque visa comprometer dispositivos IoT e preparar uma campanha de botnet, o que pode levar a uma ampla propaga\u00e7\u00e3o de malware.",
+    "potential_impact": "Potencialmente grave. O ataque pode resultar em perda de controle sobre dispositivos IoT, exposi\u00e7\u00e3o de dados sens\u00edveis e propaga\u00e7\u00e3o de malware."
+  },
+  "investigation_steps": {
+    "triage_steps": "Realizar uma triagem inicial para identificar quais sistemas foram afetados e coletar evid\u00eancias iniciais.",
+    "evidence_collection": [
+      {
+        "description": "Coletar logs de eventos relacionados ao ataque.",
+        "command": "cat /var/log/cowrie/cowrie."
+      },
+      {
+        "description": "Coletar logs de sistema.",
+        "command": "dmesg | grep -i cowrie"
+      },
+      {
+        "description": "Coletar informa\u00e7\u00f5es de processos.",
+        "command": "ps aux | grep cowrie"
+      }
+    ],
+    "technical_analysis": "Analisar os comandos executados e os arquivos criados para identificar o malware.",
+    "tools_and_commands": [
+      {
+        "tool": "Volatility",
+        "usage": "Usar para analisar a mem\u00f3ria do sistema.",
+        "example": "vol.py -f /dev/disk0s2 pslist"
+      },
+      {
+        "tool": "LogParser",
+        "usage": "Usar para analisar logs de eventos.",
+        "example": "logparser -i: -o:csv /var/log/cowrie/cowrie."
+      },
+      {
+        "tool": "grep",
+        "usage": "Usar para procurar comandos maliciosos.",
+        "example": "grep -r 'rm -rf' /"
+      }
+    ],
+    "indicators_of_compromise": [
+      "root/1.oN%cpi",
+      ">/usr/.a && cd /usr/; rm -rf .a",
+      ">/dev/shm/.a && cd /dev/shm/; rm -rf .a",
+      ">/tmp/.a && cd /tmp/; rm -rf .a",
+      "for i in `cat /proc/mounts|grep tmpfs|grep -v noexec|cut -d ' ' -f 2`; do >$i/.a && cd $i;done",
+      "/bin/busybox wget --help; /bin/busybox ftpget --help; /bin/busybox echo -e '\\x67\\x61\\x79\\x66\\x67\\x74';"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Isolar o sistema afetado e desconectar-o da rede.",
+    "system_isolation": "Desconectar o sistema da rede.",
+    "malicious_activity_blocking": "Bloquear o IP do atacante.",
+    "evidence_preservation": "Preservar evid\u00eancias antes de qualquer altera\u00e7\u00e3o."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover o malware e os arquivos maliciosos.",
+    "vulnerability_fix": "Corrigir vulnerabilidades conhecidas nos sistemas.",
+    "lateral_movement_check": "Verificar se o malware se propagou para outros sistemas."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar sistemas afetados a partir de backups.",
+    "integrity_validation": "Verificar a integridade dos sistemas restaurados.",
+    "return_to_operations": "Retornar os sistemas \u00e0 opera\u00e7\u00e3o normal ap\u00f3s a verifica\u00e7\u00e3o de integridade."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar hardening de sistemas, atualizar pol\u00edticas de seguran\u00e7a e monitorar atividades de login.",
+    "security_improvements": "Implementar solu\u00e7\u00f5es de detec\u00e7\u00e3o proativa como SIEM e EDR.",
+    "policy_updates": "Atualizar pol\u00edticas de seguran\u00e7a para incluir medidas de hardening e monitoramento."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}

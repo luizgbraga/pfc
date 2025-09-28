@@ -1,0 +1,136 @@
+{
+  "context_from_subgraph": "O subgrafo DEFEND indica um incidente de execu\u00e7\u00e3o remota de c\u00f3digo via explora\u00e7\u00e3o de vulnerabilidade em servi\u00e7o SSH exposto, com movimenta\u00e7\u00e3o lateral detectada, cria\u00e7\u00e3o de usu\u00e1rio malicioso 'sysadmin', execu\u00e7\u00e3o de comandos suspeitos ('wget', 'chmod', './payload'), e conex\u00f5es de sa\u00edda para o IP 203.0.113.50. Artefatos maliciosos identificados: '/tmp/payload', persist\u00eancia via cron. Logs mostram autentica\u00e7\u00e3o SSH n\u00e3o autorizada do IP 198.51.100.23.",
+  "incident_summary": {
+    "overview": "Foi detectada uma intrus\u00e3o em servidor Linux via explora\u00e7\u00e3o de vulnerabilidade no servi\u00e7o SSH exposto \u00e0 internet. O atacante autenticou-se com sucesso, criou o usu\u00e1rio 'sysadmin', transferiu e executou um bin\u00e1rio malicioso ('/tmp/payload'), estabeleceu persist\u00eancia via cron e iniciou conex\u00f5es de sa\u00edda para o IP 203.0.113.50.",
+    "technical_classification": "Remote Code Execution (RCE) via SSH Exploitation, Persistence Establishment, Lateral Movement (DEFEND: D3-EXE, D3-PER, D3-LAT).",
+    "severity_assessment": "Alta. O atacante obteve acesso privilegiado, executou c\u00f3digo arbitr\u00e1rio, estabeleceu persist\u00eancia e iniciou movimenta\u00e7\u00e3o lateral, com risco de exfiltra\u00e7\u00e3o de dados e comprometimento de outros ativos.",
+    "potential_impact": "Comprometimento total do servidor, poss\u00edvel exfiltra\u00e7\u00e3o de dados sens\u00edveis, risco de propaga\u00e7\u00e3o para outros sistemas, interrup\u00e7\u00e3o de servi\u00e7os e danos \u00e0 integridade/confidencialidade dos dados."
+  },
+  "investigation_steps": {
+    "triage_steps": "1. Identificar hosts afetados pelo acesso SSH n\u00e3o autorizado. 2. Verificar cria\u00e7\u00e3o de usu\u00e1rios recentes e processos suspeitos. 3. Listar conex\u00f5es de rede ativas e arquivos modificados recentemente.",
+    "evidence_collection": [
+      {
+        "description": "Coletar logs de autentica\u00e7\u00e3o SSH",
+        "command": "cp /var/log/auth.log /mnt/forense/auth.log"
+      },
+      {
+        "description": "Coletar bin\u00e1rio malicioso para an\u00e1lise",
+        "command": "cp /tmp/payload /mnt/forense/payload"
+      },
+      {
+        "description": "Exportar lista de processos ativos",
+        "command": "ps aux > /mnt/forense/ps_aux.txt"
+      },
+      {
+        "description": "Coletar crontab do sistema e do usu\u00e1rio",
+        "command": "crontab -l > /mnt/forense/crontab_user.txt; cat /etc/crontab > /mnt/forense/crontab_system.txt"
+      },
+      {
+        "description": "Registrar conex\u00f5es de rede estabelecidas",
+        "command": "netstat -antp > /mnt/forense/netstat.txt"
+      }
+    ],
+    "technical_analysis": "Analisar logs de autentica\u00e7\u00e3o para identificar hor\u00e1rios e IPs de acesso n\u00e3o autorizado. Verificar comandos executados via bash_history. Analisar bin\u00e1rio '/tmp/payload' com antiv\u00edrus e sandbox. Revisar crontabs para persist\u00eancia. Checar conex\u00f5es de sa\u00edda para IPs suspeitos. Validar integridade de arquivos de sistema.",
+    "tools_and_commands": [
+      {
+        "tool": "grep",
+        "usage": "Buscar entradas de acesso SSH suspeito",
+        "example": "grep 'Accepted' /var/log/auth.log | grep '198.51.100.23'"
+      },
+      {
+        "tool": "chkrootkit",
+        "usage": "Verificar rootkits conhecidos",
+        "example": "chkrootkit"
+      },
+      {
+        "tool": "clamscan",
+        "usage": "Escanear arquivos maliciosos",
+        "example": "clamscan -r /tmp/payload"
+      },
+      {
+        "tool": "yara",
+        "usage": "Detectar padr\u00f5es maliciosos no bin\u00e1rio",
+        "example": "yara /opt/yara_rules/malware.yar /tmp/payload"
+      },
+      {
+        "tool": "last",
+        "usage": "Listar logins recentes",
+        "example": "last -a | grep 'sysadmin'"
+      }
+    ],
+    "indicators_of_compromise": [
+      "IP de origem: 198.51.100.23",
+      "IP de destino: 203.0.113.50",
+      "Usu\u00e1rio criado: sysadmin",
+      "Arquivo: /tmp/payload",
+      "Persist\u00eancia: entrada suspeita em crontab",
+      "Comandos: wget, chmod, ./payload"
+    ]
+  },
+  "containment_procedures": {
+    "immediate_actions": "Remover imediatamente o acesso de rede externo ao servidor comprometido. Notificar equipe de resposta e suspender credenciais do usu\u00e1rio 'sysadmin'.",
+    "system_isolation": "Isolar o host afetado da rede usando comandos como: ip link set eth0 down ou desconectar fisicamente o cabo de rede.",
+    "malicious_activity_blocking": "Bloquear IPs maliciosos no firewall: iptables -A INPUT -s 198.51.100.23 -j DROP; iptables -A OUTPUT -d 203.0.113.50 -j DROP. Remover tarefas agendadas suspeitas do crontab.",
+    "evidence_preservation": "Antes de qualquer altera\u00e7\u00e3o, realizar imagens forenses do disco (dd if=/dev/sda of=/mnt/forense/disk.img bs=4M) e da mem\u00f3ria (usando LiME ou similar). Garantir hash SHA256 dos artefatos coletados."
+  },
+  "eradication_steps": {
+    "threat_removal": "Remover bin\u00e1rios maliciosos identificados (/tmp/payload), excluir usu\u00e1rio 'sysadmin' (userdel -r sysadmin), limpar entradas de persist\u00eancia em crontab e arquivos de inicializa\u00e7\u00e3o.",
+    "vulnerability_fix": "Atualizar o servi\u00e7o SSH para a vers\u00e3o mais recente (apt-get update && apt-get upgrade openssh-server). Revisar configura\u00e7\u00f5es de SSH (PermitRootLogin no, PasswordAuthentication no, usar chaves).",
+    "lateral_movement_check": "Verificar outros hosts na mesma rede por indicadores de comprometimento: buscar usu\u00e1rio 'sysadmin', conex\u00f5es para 203.0.113.50, e arquivos '/tmp/payload'. Utilizar scripts de varredura remota via SSH e ferramentas como osquery."
+  },
+  "recovery_procedures": {
+    "system_restoration": "Restaurar o sistema a partir de backup \u00edntegro anterior ao incidente. Se n\u00e3o for poss\u00edvel, reinstalar o sistema operacional e restaurar apenas dados validados.",
+    "integrity_validation": "Comparar checksums SHA256 dos arquivos de sistema com baseline confi\u00e1vel. Validar logs de integridade (AIDE, Tripwire).",
+    "return_to_operations": "Somente retornar \u00e0 opera\u00e7\u00e3o ap\u00f3s: 1) remo\u00e7\u00e3o completa dos artefatos, 2) atualiza\u00e7\u00e3o de todos os sistemas, 3) valida\u00e7\u00e3o de logs sem anomalias, 4) aprova\u00e7\u00e3o formal da equipe de seguran\u00e7a."
+  },
+  "lessons_learned_and_prevention": {
+    "preventive_recommendations": "Implementar autentica\u00e7\u00e3o por chave SSH, desabilitar login por senha, restringir acesso SSH por firewall, monitorar cria\u00e7\u00e3o de usu\u00e1rios e altera\u00e7\u00f5es em crontab.",
+    "security_improvements": "Implantar EDR com regras para detec\u00e7\u00e3o de cria\u00e7\u00e3o de usu\u00e1rios, execu\u00e7\u00e3o de bin\u00e1rios em /tmp, conex\u00f5es SSH an\u00f4malas e persist\u00eancia via cron. Atualizar periodicamente todos os sistemas.",
+    "policy_updates": "Revisar pol\u00edtica de exposi\u00e7\u00e3o de servi\u00e7os \u00e0 internet, exigir hardening de SSH, definir procedimentos de resposta a incidentes detalhados e treinar equipe para detec\u00e7\u00e3o precoce de movimenta\u00e7\u00e3o lateral."
+  },
+  "subgraph": {
+    "nodes": {
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.003": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#T1110.003",
+        "labels": [
+          "Password Spraying"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#Process": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#Process",
+        "labels": [
+          "Process"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#NetworkTraffic",
+        "labels": [
+          "Network Traffic"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#CredentialAccessTechnique",
+        "labels": [
+          "Credential Access Technique"
+        ],
+        "comments": [],
+        "depth": 0
+      },
+      "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem": {
+        "uri": "http://d3fend.mitre.org/ontologies/d3fend.owl#FileSystem",
+        "labels": [
+          "File System"
+        ],
+        "comments": [],
+        "depth": 0
+      }
+    },
+    "relationships": []
+  }
+}
