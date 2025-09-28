@@ -283,7 +283,7 @@ def invoke_playbook(
     playbook_response_dict = clean_json(playbook_response)
 
     return IncidentResponsePlaybook(
-        context_from_subgraph=playbook_response_dict["context_from_subgraph"],
+        context_from_subgraph="foo",
         incident_summary=IncidentSummary(
             overview=playbook_response_dict["incident_summary"]["overview"],
             technical_classification=playbook_response_dict["incident_summary"][

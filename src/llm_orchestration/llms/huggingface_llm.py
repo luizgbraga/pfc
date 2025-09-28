@@ -33,9 +33,10 @@ class HuggingFaceLLM(LLM):
         prompt: str,
         system_message: str = None,
         temperature: float = 0.1,
-        max_tokens: int = 2000,
+        max_tokens: int = 4096,
     ) -> Dict[str, Any]:
         try:
+            prompt = prompt.replace("http://", "").replace("https://", "")
             messages = []
             if system_message:
                 messages.append({"role": "system", "content": system_message})
