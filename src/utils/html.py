@@ -52,7 +52,7 @@ def playbook_to_html(playbook: IncidentResponsePlaybook):
         .code-block {{
             background: #f8f8f8;
             border-radius: 5px;
-            padding: 10px;
+            padding: 2px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
             margin: 6px 0 12px 0;

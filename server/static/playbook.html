@@ -68,79 +68,79 @@
 
         <section>
             <div class="section-title">Contexto do Subgrafo</div>
-            <div>The subgraph confirms that CredentialAccessTechnique is a parent class of T1110 (Brute Force) and T1003 (OS Credential Dumping), and that T1110 has subclasses including T1110.001 (Password Guessing), T1110.002 (Password Cracking), T1110.003 (Password Spraying), and T1110.004 (Credential Stuffing). The incident involves a successful Telnet brute force login using default credentials (ubnt/ubnt), followed by execution of malicious commands via busybox, indicating credential access via brute force (T1110) and potential OS credential dumping (T1003) as follow-on activity. The use of /bin/busybox VSEPU is a known signature of Mirai-family malware, which targets IoT devices via default credentials and establishes persistence via /dev/shm.</div>
+            <div>O subgrafo contém entidades fundamentais da ontologia DEFEND: User, NetworkTraffic, Process, FileSystem e CredentialAccessTechnique. O incidente envolve acesso não autorizado a um sistema via Telnet (NetworkTraffic), uso de credenciais padrão (CredentialAccessTechnique), execução de comandos maliciosos (Process) e manipulação de arquivos no sistema de arquivos (FileSystem).</div>
         </section>
 
         <section>
             <div class="section-title">Resumo do Incidente</div>
             <ul>
-                <li><b>Visão Geral:</b> An attacker successfully brute-forced a Telnet service on device 172.29.0.2 using the default credentials 'ubnt/ubnt', gained shell access, and executed a series of commands to download and execute a Mirai-family malware binary ('VSEPU') via busybox. The attack originated from IP 177.75.222.254 and lasted under 3 seconds. The attacker attempted multiple credential combinations before success, then executed commands to identify the system architecture, create a persistence file in /dev/shm, and download additional payloads via tftp/wget.</li>
-                <li><b>Classificação Técnica:</b> T1110.001 - Password Guessing (Brute Force) leading to T1003 - OS Credential Dumping and T1204 - User Execution (Malware via busybox)</li>
-                <li><b>Avaliação de Severidade:</b> Critical - The attacker achieved full system compromise on an exposed IoT device with default credentials, executed arbitrary code, and likely deployed a botnet agent (Mirai variant). The system is now a confirmed botnet node capable of participating in DDoS attacks, lateral movement, or further credential harvesting. No authentication or network segmentation prevented access.</li>
-                <li><b>Impacto Potencial:</b> Full compromise of the affected device (172.29.0.2) with potential for lateral movement to other IoT devices on the same network. The device may be used for DDoS attacks, scanning for other vulnerable devices, or as a proxy for further attacks. Sensitive data on the device (if any) is exposed. Network performance may degrade due to outbound C2 traffic. Repeated attacks indicate the system remains exposed.</li>
+                <li><b>Visão Geral:</b> Um atacante externo (177.75.222.254) se conectou ao sistema via Telnet (porta 23), realizou um ataque de força bruta com credenciais padrão e logou com sucesso como 'ubnt/ubnt'. Após o login, executou comandos para explorar o sistema, incluindo a execução de '/bin/busybox VSEPU', um binário malicioso associado a botnets IoT como Mirai. O atacante tentou baixar e executar payloads via tftp/wget e manipulou arquivos em /dev/shm, indicando intenção de persistência e propagação.</li>
+                <li><b>Classificação Técnica:</b> Credential Access Technique (T1110) seguido por Command and Control (T1071) e Execution (T1059.003) com foco em IoT comprometido via binário malicioso (VSEPU).</li>
+                <li><b>Avaliação de Severidade:</b> Alta. O sistema foi comprometido por credenciais padrão em um dispositivo IoT exposto à internet, com execução de binário malicioso (VSEPU) associado a botnets. O atacante demonstrou capacidade de persistência, execução de código e potencial para propagação lateral em redes IoT.</li>
+                <li><b>Impacto Potencial:</b> Comprometimento de dispositivo IoT, uso como vetor de ataque para propagação em rede interna, participação em DDoS, exfiltração de dados de rede, e possível infecção de outros dispositivos com credenciais padrão. Risco de violação de conformidade e interrupção de serviços críticos.</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Etapas de Investigação</div>
             <div class="subsection-title">Etapas de Triagem</div>
-            <div>Immediately isolate the affected host (172.29.0.2) from the network. Correlate the Telnet login success (cowrie.login.success) with subsequent command inputs. Verify if the source IP (177.75.222.254) has attacked other systems by querying logs for repeated connections to other devices on port 23. Check for other successful logins from this IP across the environment.</div>
+            <div>Verificar logs de acesso Telnet em todos os sensores Cowrie, identificar sessões com login bem-sucedido e comandos suspeitos. Focar em sessões com uso de 'busybox VSEPU', 'tftp', 'wget' ou escrita em /dev/shm. Correlacionar IPs de origem com listas de reputação de ameaças (ex: AbuseIPDB).</div>
 
             <div class="subsection-title">Coleta de Evidências</div>
             <table>
                 <tr><th>Descrição</th><th>Comando</th></tr>
-                <tr><td>Extract all Cowrie logs for session d3dbb59041fb and correlate with system logs from the affected host.</td><td><span class="code-block">grep 'd3dbb59041fb' /var/log/cowrie/cowrie.* > /evidence/session_d3dbb59041fb.log</span></td></tr><tr><td>Capture memory dump of the compromised host for analysis of running processes and injected code.</td><td><span class="code-block">volatility -f /evidence/ramdump.raw --profile=LinuxUbuntu_5_4_0-100-generic linux_pslist</span></td></tr><tr><td>Dump the contents of /dev/shm and check for .s file or busybox binary.</td><td><span class="code-block">cp -r /dev/shm /evidence/dev_shm_forensic/ && ls -la /evidence/dev_shm_forensic/.s</span></td></tr><tr><td>Extract bash history and command history from the compromised system if available.</td><td><span class="code-block">cat ~/.bash_history > /evidence/bash_history.txt 2>/dev/null || cat /root/.bash_history > /evidence/bash_history.txt 2>/dev/null</span></td></tr>
+                <tr><td>Extrair todos os logs de sessão do sensor Cowrie para análise forense.</td><td><span class="code-block">grep -E '"eventid":"cowrie.session.(connect|login|closed)"' /var/log/cowrie/cowrie.* > /evidence/cowrie_sessions.</span></td></tr><tr><td>Coletar comandos executados durante a sessão comprometida (d3dbb59041fb).</td><td><span class="code-block">grep '"session":"d3dbb59041fb"' /var/log/cowrie/cowrie.* | grep '"eventid":"cowrie.command.input"' > /evidence/compromised_commands.txt</span></td></tr><tr><td>Exportar metadados do sistema afetado (se acessível) para análise de artefatos em disco.</td><td><span class="code-block">find /dev/shm -type f -name "*.s" -exec ls -la {} \; > /evidence/dev_shm_artifacts.txt</span></td></tr>
             </table>
 
             <div class="subsection-title">Análise Técnica</div>
-            <div>Analyze the sequence of commands: 'cat /proc/mounts' confirms system enumeration; '/bin/busybox VSEPU' is a known Mirai binary; 'cd /dev/shm; cat .s || cp /bin/echo .s' creates a persistence file; 'tftp; wget; /bin/busybox VSEPU' attempts to download additional payloads. The use of 'dd bs=52 count=1 if=.s' suggests the attacker is extracting a binary payload from .s. The absence of shell output in logs indicates the binary may have spawned a background process or dropped a daemon.</div>
+            <div>Analisar o binário 'VSEPU' como payload de botnet IoT. Verificar se é uma variante do Mirai ou similar, com base em hashes e strings. Investigar se o sistema afetado é um roteador ou câmera IoT com firmware vulnerável. Verificar se o IP 177.75.222.254 está associado a outras tentativas de login em outros sensores. Analisar padrões de comandos: 'cat .s || cp /bin/echo .s' sugere tentativa de criar um arquivo de payload, e 'dd bs=52 count=1 if=.s' indica leitura binária para exfiltração ou execução.</div>
 
             <div class="subsection-title">Ferramentas e Comandos</div>
             <table>
                 <tr><th>Ferramenta</th><th>Uso</th><th>Exemplo</th></tr>
-                <tr><td>volatility</td><td>Analyze memory dumps to detect hidden processes, network connections, and injected code.</td><td><span class="code-block">volatility -f /evidence/ramdump.raw --profile=LinuxUbuntu_5_4_0-100-generic linux_netstat</span></td></tr><tr><td>grep</td><td>Search for known malicious strings in logs and files.</td><td><span class="code-block">grep -i 'vsepu' /var/log/cowrie/cowrie.*</span></td></tr><tr><td>strings</td><td>Extract readable strings from binary files like .s or busybox.</td><td><span class="code-block">strings /evidence/dev_shm_forensic/.s | grep -E 'http|https|\.com|\.net'</span></td></tr><tr><td>yara</td><td>Scan files for known Mirai malware signatures.</td><td><span class="code-block">yara -r /rules/mirai.yar /evidence/dev_shm_forensic/.s</span></td></tr><tr><td>sha256sum</td><td>Generate hash of suspicious files for threat intelligence lookup.</td><td><span class="code-block">sha256sum /evidence/dev_shm_forensic/.s</span></td></tr>
+                <tr><td>strings</td><td>Extrair strings de binários suspeitos para identificar C2 domains ou IPs.</td><td><span class="code-block">strings /evidence/VSEPU_binary | grep -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'</span></td></tr><tr><td>sha256sum</td><td>Calcular hash SHA256 do binário VSEPU para busca em VT ou MISP.</td><td><span class="code-block">sha256sum /evidence/VSEPU_binary</span></td></tr><tr><td>grep</td><td>Buscar por padrões de comandos maliciosos em logs.</td><td><span class="code-block">grep -i 'busybox.*VSEPU' /var/log/cowrie/cowrie.*</span></td></tr>
             </table>
 
             <div class="subsection-title">Indicadores de Comprometimento</div>
             <ul>
-                <li>177.75.222.254</li><li>ubnt/ubnt</li><li>/bin/busybox VSEPU</li><li>/dev/shm/.s</li><li>tftp</li><li>wget</li><li>dd bs=52 count=1 if=.s</li><li>VSEPU</li><li>linux-hppa-msb</li>
+                <li>177.75.222.254</li><li>ubnt/ubnt</li><li>/bin/busybox VSEPU</li><li>cd /dev/shm; cat .s || cp /bin/echo .s</li><li>tftp; wget; /bin/busybox VSEPU</li><li>dd bs=52 count=1 if=.s</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Procedimentos de Contenção</div>
             <ul>
-                <li><b>Ações Imediatas:</b> Immediately disconnect the affected host (172.29.0.2) from the network. Block the source IP (177.75.222.254) at the firewall. Disable Telnet service on all devices in the environment.</li>
-                <li><b>Isolamento do Sistema:</b> Use network segmentation to isolate the subnet containing 172.29.0.2. Execute: iptables -A INPUT -s 177.75.222.254 -j DROP && iptables -A OUTPUT -d 177.75.222.254 -j DROP on all perimeter firewalls. If in cloud, apply security group rules to block all traffic to/from 177.75.222.254.</li>
-                <li><b>Bloqueio de Atividades Maliciosas:</b> Block the following domains/IPs in DNS and firewall: tftp://*, wget://*, and any domains resolving to known Mirai C2 servers (e.g., via VirusTotal or AlienVault OTX). Add hash of .s file (if known) to EDR blocklist. Block port 23/TCP outbound from internal network.</li>
-                <li><b>Preservação de Evidências:</b> Before powering off the system, capture a full memory dump using LiME: insmod /opt/lime/lime-5.4.0-100-generic.ko 'path=/evidence/ramdump.raw format=raw'. Copy /dev/shm, /tmp, /var/log, and /root/.bash_history to a secure forensic volume. Hash all files: find /evidence -type f -exec sha256sum {} \; > /evidence/checksums.sha256</li>
+                <li><b>Ações Imediatas:</b> Desativar imediatamente o serviço Telnet no dispositivo afetado. Bloquear o IP 177.75.222.254 em todos os firewalls de borda e sensores de rede. Desativar o acesso SSH/Telnet de internet para todos os dispositivos IoT.</li>
+                <li><b>Isolamento do Sistema:</b> Isolar o dispositivo afetado da rede interna: desconectá-lo fisicamente ou aplicar regra de firewall para bloquear todo tráfego de entrada e saída. Comando: iptables -A OUTPUT -d 172.29.0.2 -j DROP && iptables -A INPUT -s 172.29.0.2 -j DROP</li>
+                <li><b>Bloqueio de Atividades Maliciosas:</b> Bloquear no firewall de rede: IP 177.75.222.254, domínios associados a VSEPU (ex: mirai-c2[.]com), e portas 23/Telnet e 69/TFTP. Comandos: iptables -A INPUT -s 177.75.222.254 -j DROP && iptables -A OUTPUT -p udp --dport 69 -j DROP</li>
+                <li><b>Preservação de Evidências:</b> Copiar todos os logs do sensor Cowrie para armazenamento imutável: cp /var/log/cowrie/cowrie.* /evidence/backup/ && chmod 444 /evidence/backup/* && sha256sum /evidence/backup/* > /evidence/backup/checksums.sha256</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Etapas de Erradicação</div>
             <ul>
-                <li><b>Remoção da Ameaça:</b> Remove all instances of /dev/shm/.s and /bin/busybox if modified. Use: find /dev/shm -name ".s" -delete && find /tmp -name "*.s" -delete && rm -f /tmp/VSEPU /tmp/busybox. Scan the system with ClamAV: clamscan -r --bell -i /dev/shm /tmp /var/tmp. Use YARA to scan for Mirai signatures: yara -r /rules/mirai.yar /</li>
-                <li><b>Correção de Vulnerabilidades:</b> Disable Telnet service entirely: systemctl disable telnet.socket && systemctl stop telnet.socket. Replace with SSH and enforce key-based authentication. Change all default credentials on IoT devices. Apply firmware updates to all devices on the network. Block inbound TCP/23 at the firewall for all internal and external IPs.</li>
-                <li><b>Verificação de Movimento Lateral:</b> Scan all devices on the same subnet (172.29.0.0/24) for open Telnet ports: nmap -p 23 --open 172.29.0.0/24 -oG /evidence/telnet_scan.txt. Check for successful logins in Cowrie logs from other IPs targeting the same device. Look for outbound connections from other devices to 177.75.222.254 or known Mirai C2 IPs using netflow data.</li>
+                <li><b>Remoção da Ameaça:</b> Remover o binário VSEPU e arquivos suspeitos em /dev/shm: find /dev/shm -name "*.s" -delete && rm -f /tmp/VSEPU /tmp/busybox 2>/dev/null. Verificar processos em execução: ps aux | grep -i "VSEPU" && kill -9 <PID> se encontrado.</li>
+                <li><b>Correção de Vulnerabilidades:</b> Atualizar firmware do dispositivo IoT afetado com versão oficial e segura. Alterar todas as credenciais padrão (ubnt/ubnt, root/root, admin/admin) em todos os dispositivos IoT da rede. Desativar serviços desnecessários como Telnet e TFTP.</li>
+                <li><b>Verificação de Movimento Lateral:</b> Verificar logs de outros sensores Cowrie para tentativas de login com as mesmas credenciais (ubnt/ubnt) em outros IPs. Buscar por conexões de saída suspeitas do dispositivo afetado: netstat -anp | grep ESTABLISHED | grep -v "127.0.0.1". Verificar se o IP 177.75.222.254 tentou acessar outros dispositivos na rede interna.</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Procedimentos de Recuperação</div>
             <ul>
-                <li><b>Restauração do Sistema:</b> Rebuild the compromised host from a known-good image or firmware. Do not restore from backup if it contains /dev/shm/.s or modified busybox. Deploy the latest vendor firmware for the device (likely Ubiquiti). Reconfigure with strong SSH keys and disable root login.</li>
-                <li><b>Validação de Integridade:</b> Verify system integrity using checksums: compare sha256sum of /bin/busybox, /bin/sh, and /bin/echo against a clean baseline. Use AIDE or Tripwire: aide --init && aide --check. Validate that /dev/shm is empty and no hidden processes exist: ps aux | grep -E '(vsepu|busybox)' && ls -la /dev/shm</li>
-                <li><b>Retorno às Operações:</b> Return the system to production only after: 1) All forensic evidence is preserved, 2) System is rebuilt with updated firmware, 3) Network rules block Telnet and known malicious IPs, 4) No lateral movement detected on other systems, and 5) SIEM alerts confirm no further connections from 177.75.222.254 for 72 hours.</li>
+                <li><b>Restauração do Sistema:</b> Restaurar o dispositivo afetado a partir de backup limpo ou reinstalar firmware oficial. Nunca restaurar de imagem comprometida. Aplicar configuração segura: desativar Telnet, habilitar SSH com chave, bloquear portas desnecessárias.</li>
+                <li><b>Validação de Integridade:</b> Validar integridade do firmware com hash conhecido: sha256sum /firmware.bin && compare com hash oficial do fabricante. Verificar ausência de arquivos suspeitos: find / -type f -name "*.s" -o -name "VSEPU" -o -name "busybox" 2>/dev/null | grep -v "/proc".</li>
+                <li><b>Retorno às Operações:</b> Retornar à operação somente após: (1) firmware atualizado e verificado, (2) credenciais alteradas, (3) regras de firewall aplicadas, (4) nenhum processo suspeito em execução, e (5) monitoramento contínuo por 48h sem atividade anormal.</li>
             </ul>
         </section>
 
         <section>
             <div class="section-title">Lições Aprendidas & Prevenção</div>
             <ul>
-                <li><b>Recomendações Preventivas:</b> Deploy EDR with behavioral detection for /bin/busybox execution and unusual tftp/wget activity. Create SIEM rule: IF eventid="cowrie.login.success" AND username IN ["ubnt","root","admin","guest"] AND password IN ["ubnt","admin","password","1234"] THEN trigger critical alert. Block all outbound tftp and wget from non-whitelisted hosts.</li>
-                <li><b>Melhorias de Segurança:</b> Enforce network segmentation: isolate IoT devices on a separate VLAN with no outbound internet access. Disable Telnet on all devices by default. Implement mandatory credential rotation for IoT devices. Enable SSH key authentication and disable password login. Deploy honeypots (Cowrie) to detect scanning and brute force attempts.</li>
-                <li><b>Atualizações de Políticas:</b> Update incident response policy to require immediate isolation of any device with successful Telnet login. Update asset inventory to classify all IoT devices as critical and require quarterly firmware audits. Mandate that all default credentials be changed during device onboarding. Require SIEM alerting on any login to port 23 with username/password combo from known default lists.</li>
+                <li><b>Recomendações Preventivas:</b> Criar regra SIEM: alerta se 'busybox VSEPU' ou 'cd /dev/shm; cat .s' for detectado em logs de Telnet. Criar regra YARA para binários VSEPU: rule mirai_vsepu { strings: $a = "VSEPU" ascii condition: all of them }.</li>
+                <li><b>Melhorias de Segurança:</b> Implementar hardening: desativar Telnet em todos os dispositivos IoT, usar SSH com autenticação por chave, bloquear portas 23 e 69 em firewalls de borda, aplicar segmentação de rede para dispositivos IoT. Habilitar EDR em todos os dispositivos Linux IoT que suportem.</li>
+                <li><b>Atualizações de Políticas:</b> Atualizar política de acesso: proibir expor serviços de administração (Telnet, FTP, SSH) à internet. Exigir mudança de credenciais padrão em todos os dispositivos IoT no momento da instalação. Implementar revisão trimestral de dispositivos expostos e relatórios de vulnerabilidades.</li>
             </ul>
         </section>
     </div>
