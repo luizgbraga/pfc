@@ -3,13 +3,16 @@ from typing import Any, Dict
 import anthropic
 from loguru import logger
 
+from config.settings import DEFAULT_ANTHROPIC_LLM_MODEL, ANTHROPIC_API_KEY
 from src.llm_orchestration.llms.llm_base import LLM
 
 
 class AnthropicLLM(LLM):
-    def __init__(self, model_name: str = None, api_key: str = None):
-        super().__init__(model_name)
-        self.api_key = api_key or anthropic.api_key
+    def __init__(self, model_name: str = None):
+        used_model = model_name or DEFAULT_ANTHROPIC_LLM_MODEL
+        super().__init__(used_model)
+
+        self.api_key = ANTHROPIC_API_KEY
         logger.info(f"AnthropicLLM configurado com modelo '{self.model_name}'")
 
     def invoke(

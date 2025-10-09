@@ -10,14 +10,15 @@ NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 DEFAULT_OLLAMA_LLM_MODEL = os.getenv(
     "DEFAULT_LLM_MODEL", "deepseek-r1:1.5b-qwen-distill-q8_0"
 )
 DEFAULT_OPENAI_LLM_MODEL = os.getenv("DEFAULT_OPENAI_LLM_MODEL", "gpt-4.1-2025-04-14")
 DEFAULT_ANTHROPIC_LLM_MODEL = os.getenv(
-    "DEFAULT_ANTHROPIC_LLM_MODEL", "claude-sonnet-4-20250514"
+    "DEFAULT_ANTHROPIC_LLM_MODEL", "claude-sonnet-4-5"
 )
-DEFAULT_HF_LLM_MODEL = os.getenv("DEFAULT_HF_LLM_MODEL", "Qwen/Qwen2.5-14B-Instruct:featherless-ai")
+DEFAULT_HF_LLM_MODEL = os.getenv("DEFAULT_HF_LLM_MODEL", "Qwen/Qwen3-Next-80B-A3B-Instruct")
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
