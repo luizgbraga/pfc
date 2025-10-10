@@ -173,7 +173,9 @@
         
         <div class="example">
             <div class="example-title">Example Alert JSON:</div>
-            <div class="example-content" id="exampleAlert">{"logs":[
+            <div class="example-content" id="exampleAlert">{
+  "incident_title": "Telnet Brute Force Attack with Successful Login and Malware Execution",
+  "logs": [
     "{\"eventid\":\"cowrie.session.connect\",\"src_ip\":\"177.75.222.254\",\"src_port\":10846,\"dst_ip\":\"172.29.0.2\",\"dst_port\":23,\"session\":\"d3dbb59041fb\",\"protocol\":\"telnet\",\"message\":\"New connection: 177.75.222.254:10846 (172.29.0.2:23) [session: d3dbb59041fb]\",\"sensor\":\"ac7b87e8b1e5\",\"timestamp\":\"2025-05-01T03:54:27.989950Z\"}",
     "{\"eventid\":\"cowrie.login.failed\",\"username\":\"root\",\"password\":\"xmhdipc\",\"message\":\"login attempt [root/xmhdipc] failed\",\"sensor\":\"ac7b87e8b1e5\",\"timestamp\":\"2025-05-01T03:54:28.131339Z\",\"src_ip\":\"177.75.222.254\",\"session\":\"d3dbb59041fb\"}",
     "{\"eventid\":\"cowrie.login.failed\",\"username\":\"root\",\"password\":\"Zte521\",\"message\":\"login attempt [root/Zte521] failed\",\"sensor\":\"ac7b87e8b1e5\",\"timestamp\":\"2025-05-01T03:54:28.272177Z\",\"src_ip\":\"177.75.222.254\",\"session\":\"d3dbb59041fb\"}",
@@ -189,7 +191,8 @@
     "{\"eventid\":\"cowrie.command.input\",\"input\":\"/bin/busybox VSEPU\",\"message\":\"CMD: /bin/busybox VSEPU\",\"sensor\":\"ac7b87e8b1e5\",\"timestamp\":\"2025-05-01T03:54:30.780938Z\",\"src_ip\":\"177.75.222.254\",\"session\":\"d3dbb59041fb\"}",
     "{\"eventid\":\"cowrie.command.input\",\"input\":\"rm .s; exit\",\"message\":\"CMD: rm .s; exit\",\"sensor\":\"ac7b87e8b1e5\",\"timestamp\":\"2025-05-01T03:54:30.781592Z\",\"src_ip\":\"177.75.222.254\",\"session\":\"d3dbb59041fb\"}",
     "{\"eventid\":\"cowrie.session.closed\",\"duration\":2.7946550846099854,\"message\":\"Connection lost after 2 seconds\",\"sensor\":\"ac7b87e8b1e5\",\"timestamp\":\"2025-05-01T03:54:30.784545Z\",\"src_ip\":\"177.75.222.254\",\"session\":\"d3dbb59041fb\"}"
-]}</div>
+  ]
+}</div>
             <button class="btn-example" onclick="useExample()">Use This Example</button>
         </div>
         
